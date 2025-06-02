@@ -4,13 +4,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { FaBell, FaSignOutAlt, FaEllipsisV, FaBars, FaTimes  } from "react-icons/fa";
 import AdminFooter from "@/app/components/AdminFooter";
-export default function AddNewUser() {
+export default function DateSheet() {
 const [sidebarOpen, setSidebarOpen] = useState(false);
 return (
 <div className="flex flex-col md:flex-row min-h-screen font-sans">
   {/* Mobile Topbar */}
   <div className="md:hidden flex justify-between items-center bg-[#004432] text-white p-4">
-    <h1 className="text-lg font-bold">Login / Add Admin</h1>
+    <h1 className="text-lg font-bold">Date Sheet</h1>
     <button onClick={() =>
       setSidebarOpen(!sidebarOpen)}>
       {sidebarOpen ? 
@@ -92,7 +92,7 @@ return (
   <div className="flex-1 flex flex-col grow">
     {/* Top Bar for Desktop */}
     <div className="hidden md:flex justify-between items-center bg-[#dad5cf] shadow p-4">
-      <h1 className="lg:text-xl md:text-base font-semibold font-opan-sans">Login / Add Admin</h1>
+      <h1 className="lg:text-xl md:text-base font-semibold font-opan-sans">Date Sheet</h1>
       <div className="flex items-center space-x-4 text-gray-700">
         <FaBell className="w-5 h-5 cursor-pointer" />
         <FaSignOutAlt className="w-5 h-5 cursor-pointer" />
@@ -102,48 +102,46 @@ return (
     {/* Page Content */}
     {/* Section Personal Data Form */}
     <section className="w-full mx-auto p-12 flex grow">
-      <form className="space-y-6 w-full">        
-        {/* Row 2: Name input fields with labels */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="fullName" className="block mb-1 font-semibold text-gray-700">FULL NAME</label>
-            <input
-              type="text"
-              id="fullName"
-              className="w-full border border-gray-300 shadow-md rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]"
-              />
-          </div>
-          <div>
-            <label htmlFor="email" className="block mb-1 font-semibold text-gray-700">EMAIL</label>
-            <input
-              type="email"
-              id="email"
-              className="w-full border border-gray-300 shadow-md rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]"
-              />
-          </div>
-        </div>
+      <form className="space-y-6 w-full">
         {/* Row 1: Two selectors with labels */}
         <div className="grid grid-cols-1">
           <div>
-            <label htmlFor="Certificate-now-required" className="block mb-1 font-semibold text-gray-700">USER TYPE</label>
+            <label htmlFor="Certificate-now-required" className="block mb-1 font-semibold text-gray-700">CLASS</label>
             <select id="selector1" className="w-full border border-gray-300 shadow-md rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]">
-              <option value="">Add User Type</option>
+              <option value="">Select Class</option>
               <option value="option1">1</option>
               <option value="option2">2</option>
             </select>
           </div>
         </div>
-        {/* Row 3: Password and Mobile Number */}
-        <div className="grid grid-cols-1">
+        {/* Row 2: Name input fields with labels */}
+        <div className="grid grid-cols-1 gap-4">
           <div>
-            <label htmlFor="password" className="block mb-1 font-semibold text-gray-700">PASSWORD</label>
-            <input
-              type="password"
-              id="password"
-              className="w-full border border-gray-300 shadow-md rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]"
-              />
+            <label htmlFor="fullName" className="block mb-1 font-semibold text-gray-700">NORMAL FEE</label>
+            <select id="selector1" className="w-full border border-gray-300 shadow-md rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]">
+              <option value="">Select Session</option>
+              <option value="option1">1</option>
+              <option value="option2">2</option>
+            </select>
           </div>
-        </div>
+          <div>
+            <label className="block mb-1 font-semibold text-gray-700">MAX UPLOAD 12 MB</label>
+            {/* flex-col on mobile & tablet, flex-row on lg+ */}
+            <div className="flex flex-col md:flex-col lg:flex-row">
+              <input
+                type="file"
+                className="flex-grow border border-black rounded-l-md px-3 py-2 focus:outline-none mb-2 md:mb-2 lg:mb-0"
+                accept="image/*,application/pdf"
+              />
+              <button
+                type="button"
+                className="bg-[#004432] px-4 py-2 rounded-r-md border text-white cursor-pointer lg:ml-2"
+              >
+                Browse
+              </button>
+            </div>
+          </div>
+        </div>        
         
         {/* Row 10: Next Button centered with plus icon on left */}
         <div className="flex justify-start items-center">
@@ -164,7 +162,7 @@ return (
             </svg>
           </span>
           <span className="bg-[#004432] text-white rounded-br-lg flex justify-center items-center font-semibold hover:bg-[#003522] px-4">
-          Register
+          Update
           </span>
           </button>
         </div>

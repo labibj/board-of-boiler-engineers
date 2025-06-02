@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { FaBell, FaSignOutAlt, FaEllipsisV, FaBars, FaTimes, FaFileAlt, FaFileInvoiceDollar, FaIdBadge, FaRegCalendarAlt, FaCheckCircle  } from "react-icons/fa";
+import { FaBell, FaSignOutAlt, FaEllipsisV, FaBars, FaTimes  } from "react-icons/fa";
 import AdminFooter from "@/app/components/AdminFooter";
 export default function Profile() {
 const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -52,41 +52,40 @@ return (
     </Link>
     <hr className="border-t border-white w-full" />
     {/* Profile */}
-    <Link href="/admin/dashboard/" className="flex items-center space-x-3 hover:text-gray-300">
+    <Link href="/admin/profile/" className="flex items-center space-x-3 hover:text-gray-300">
     <Image src="/profile-icon.png" alt="Profile Icon" width={20} height={20} />
     <span className="font-semibold tracking-wide">Profile</span>
     </Link>
     <hr className="border-t border-white w-full" />
     {/* Applications */}
-    <Link href="/admin/dashboard/" className="flex items-center space-x-3 hover:text-gray-300">
+    <Link href="/admin/applications/" className="flex items-center space-x-3 hover:text-gray-300">
     <Image src="/application-icon.png" alt="Applications Icon" width={20} height={20} />
     <span className="font-semibold tracking-wide">Applications</span>
     </Link>
     <hr className="border-t border-white w-full" />
     {/* Date Sheet */}
-    <Link href="/admin/dashboard/" className="flex items-center space-x-3 hover:text-gray-300">
+    <Link href="/admin/date-sheet/" className="flex items-center space-x-3 hover:text-gray-300">
     <Image src="/datesheet-icon.png" alt="Date Sheet Icon" width={20} height={20} />
     <span className="font-semibold tracking-wide">Date Sheet</span>
     </Link>
     <hr className="border-t border-white w-full" />
     {/* Result */}
-    <Link href="/admin/dashboard/" className="flex items-center space-x-3 hover:text-gray-300">
+    <Link href="/admin/result-management/" className="flex items-center space-x-3 hover:text-gray-300">
     <Image src="/result-icon.png" alt="Result Icon" width={20} height={20} />
     <span className="font-semibold tracking-wide">Result</span>
     </Link>
     <hr className="border-t border-white w-full" />
     {/* Fee Structure */}
-    <Link href="" className="flex items-center space-x-3 hover:text-gray-300 mt-4">
+    <Link href="/admin/fee-structure/" className="flex items-center space-x-3 hover:text-gray-300 mt-4">
     <Image src="/logout-icon.png" alt="Logout Icon" width={20} height={20} />
     <span className="font-semibold tracking-wide">Fee Structure</span>
     </Link>
     <hr className="border-t border-white w-full" />
     {/* Add User */}
-    <Link href="" className="flex items-center space-x-3 hover:text-gray-300 mt-4">
+    <Link href="/admin/add-new-user" className="flex items-center space-x-3 hover:text-gray-300 mt-4">
     <Image src="/logout-icon.png" alt="Logout Icon" width={20} height={20} />
-    <span className="font-semibold tracking-wide">Add User</span>
+    <span className="font-semibold tracking-wide">Add New User</span>
     </Link>
-    <hr className="border-t border-white w-full" />
   </nav>
   </aside>
   {/* Main Content */}

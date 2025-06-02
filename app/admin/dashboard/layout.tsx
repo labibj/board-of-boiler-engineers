@@ -45,49 +45,50 @@ export default function DashboardLayout() {
         </div>
 
         {/* Navigation */}
-<nav className="flex flex-col space-y-4 w-full">
-  {/* Dashboard */}
-  <Link href="/admin/dashboard" className="flex items-center space-x-3 hover:text-gray-300">
+{/* Navigation */}
+  <nav className="flex flex-col space-y-4 w-full">
+    {/* Dashboard */}
+    <Link href="/admin/dashboard" className="flex items-center space-x-3 hover:text-gray-300">
     <Image src="/dashboard-icon.png" alt="Dashboard Icon" width={20} height={20} />
     <span className="font-semibold tracking-wide">Dashboard</span>
-  </Link>
-  <hr className="border-t border-white w-full" />
-
-  {/* Profile */}
-  <Link href="/admin/dashboard/" className="flex items-center space-x-3 hover:text-gray-300">
+    </Link>
+    <hr className="border-t border-white w-full" />
+    {/* Profile */}
+    <Link href="/admin/profile/" className="flex items-center space-x-3 hover:text-gray-300">
     <Image src="/profile-icon.png" alt="Profile Icon" width={20} height={20} />
     <span className="font-semibold tracking-wide">Profile</span>
-  </Link>
-  <hr className="border-t border-white w-full" />
-
-  {/* Applications */}
-  <Link href="/admin/dashboard/" className="flex items-center space-x-3 hover:text-gray-300">
+    </Link>
+    <hr className="border-t border-white w-full" />
+    {/* Applications */}
+    <Link href="/admin/applications/" className="flex items-center space-x-3 hover:text-gray-300">
     <Image src="/application-icon.png" alt="Applications Icon" width={20} height={20} />
     <span className="font-semibold tracking-wide">Applications</span>
-  </Link>
-  <hr className="border-t border-white w-full" />
-
-  {/* Date Sheet */}
-  <Link href="/admin/dashboard/" className="flex items-center space-x-3 hover:text-gray-300">
+    </Link>
+    <hr className="border-t border-white w-full" />
+    {/* Date Sheet */}
+    <Link href="/admin/date-sheet/" className="flex items-center space-x-3 hover:text-gray-300">
     <Image src="/datesheet-icon.png" alt="Date Sheet Icon" width={20} height={20} />
     <span className="font-semibold tracking-wide">Date Sheet</span>
-  </Link>
-  <hr className="border-t border-white w-full" />
-
-  {/* Result */}
-  <Link href="/admin/dashboard/" className="flex items-center space-x-3 hover:text-gray-300">
+    </Link>
+    <hr className="border-t border-white w-full" />
+    {/* Result */}
+    <Link href="/admin/result-management/" className="flex items-center space-x-3 hover:text-gray-300">
     <Image src="/result-icon.png" alt="Result Icon" width={20} height={20} />
     <span className="font-semibold tracking-wide">Result</span>
-  </Link>
-  <hr className="border-t border-white w-full" />
-
-  {/* Logout */}
-  <Link href="/logout" className="flex items-center space-x-3 hover:text-gray-300 mt-4">
+    </Link>
+    <hr className="border-t border-white w-full" />
+    {/* Fee Structure */}
+    <Link href="/admin/fee-structure/" className="flex items-center space-x-3 hover:text-gray-300 mt-4">
     <Image src="/logout-icon.png" alt="Logout Icon" width={20} height={20} />
-    <span className="font-semibold tracking-wide">Logout</span>
-  </Link>
-  <hr className="border-t border-white w-full" />
-</nav>
+    <span className="font-semibold tracking-wide">Fee Structure</span>
+    </Link>
+    <hr className="border-t border-white w-full" />
+    {/* Add User */}
+    <Link href="/admin/add-new-user" className="flex items-center space-x-3 hover:text-gray-300 mt-4">
+    <Image src="/logout-icon.png" alt="Logout Icon" width={20} height={20} />
+    <span className="font-semibold tracking-wide">Add New User</span>
+    </Link>
+  </nav>
 
       </aside>
 
