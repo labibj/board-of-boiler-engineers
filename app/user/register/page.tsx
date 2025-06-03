@@ -246,7 +246,7 @@ export default function Register() {
         type="submit"
         className="cursor-pointer bg-[#004432] text-white px-8 py-3 rounded-r-md font-semibold hover:bg-[#003522] transition"
       >
-        Next
+        NEXT
       </button>
     </div>
   </form>
