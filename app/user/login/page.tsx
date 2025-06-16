@@ -18,11 +18,11 @@ export default function LogIn() {
             USER LOGIN
           </h2>
 
-          {/* CNIC Number Field */}
+          {/* Email Field */}
           <div className="mb-3">
             <input
-              type="text"
-              placeholder="CNIC Number"
+              type="email"
+              placeholder="Email"
               className="w-full px-4 py-2 rounded-md bg-white text-black focus:outline-none focus:ring-2 focus:ring-white placeholder:text-gray-500"
             />
           </div>
