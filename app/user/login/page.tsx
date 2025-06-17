@@ -1,12 +1,50 @@
 "use client";
 
+import { useState } from "react";
 import UserHeader from "@/app/components/UserHeader";
 import UserFooter from "@/app/components/UserFooter";
 
-export default function LogIn() {
+export default function LoginPage() {
+  const [form, setForm] = useState({
+    identifier: "", // CNIC or Email
+    password: "",
+  });
+  const [message, setMessage] = useState("");
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage("");
+
+    try {
+      const res = await fetch("/api/user/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        localStorage.setItem("token", data.token);
+        setMessage("✅ Login successful!");
+        // Optionally redirect:
+        // router.push("/dashboard"); (if using Next.js router)
+      } else {
+        setMessage(`❌ ${data.message}`);
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setMessage("❌ Something went wrong. Please try again.");
+    }
+  };
+
   return (
     <>
-      {/* Header Section */}
+    {/* Header Section */}
       <UserHeader />
 
       {/* Login Form */}
@@ -17,42 +55,31 @@ export default function LogIn() {
           <h2 className="text-2xl font-bold text-center text-white mb-5 font-poppins">
             USER LOGIN
           </h2>
-
-          {/* Email Field */}
-          <div className="mb-3">
-            <input
-              type="email"
-              placeholder="Email"
-              className="w-full px-4 py-2 rounded-md bg-white text-black focus:outline-none focus:ring-2 focus:ring-white placeholder:text-gray-500"
-            />
-          </div>
-
-          {/* Password Field */}
-          <div className="mb-3">
-            <input
-              type="password"
-              placeholder="Password"
-              className="w-full px-4 py-2 rounded-md bg-white text-black focus:outline-none focus:ring-2 focus:ring-white placeholder:text-gray-500"
-            />
-          </div>
-
-          {/* Forgot Password */}
-          <div className="mb-3 text-right">
-            <a href="#" className="text-sm text-white hover:underline">
-              Forgot your password?
-            </a>
-          </div>
-
-          {/* LOGIN Button */}
-          <div>
-            <button
-              className="w-full bg-white text-[#004432] font-semibold py-2 sm:py-2.5 md:py-3 text-sm sm:text-base rounded-md hover:bg-gray-100 transition cursor-pointer"
-            >
-              LOGIN
-            </button>
-          </div>
-        </div>
-      </section>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+        <input
+          name="identifier"
+          placeholder="CNIC or Email"
+          onChange={handleChange}
+          value={form.identifier}
+          required
+          className="border p-2 rounded"
+        />
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          onChange={handleChange}
+          value={form.password}
+          required
+          className="border p-2 rounded"
+        />
+        <button type="submit" className="bg-blue-600 text-white p-2 rounded">
+          Login
+        </button>
+      </form>
+      {message && <p className="mt-2 text-center">{message}</p>}
+    </div>
+    </section>
 
       {/* Footer Section */}
       <UserFooter />
