@@ -47,38 +47,71 @@ export default function RegisterPage() {
           REGISTER NOW
         </h2>
 
-        <section className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
-    <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-      <input
-        name="name"
-        placeholder="Name"
-        onChange={handleChange}
-        required
-      />
-      <input
-        type="email"
-        name="email"
-        placeholder="Email"
-        onChange={handleChange}
-        required
-      />
-      <input
-        name="cnic"
-        placeholder="CNIC"
-        onChange={handleChange}
-        required
-      />
-      <input
-        type="password"
-        name="password"
-        placeholder="Password"
-        onChange={handleChange}
-        required
-      />
-      <button type="submit">Register</button>
-      {message && <p>{message}</p>}
-    </form>
-    </section>
+        <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Name */}
+            <div>
+              <label htmlFor="name" className="block mb-1 font-semibold text-gray-700">Name</label>
+            <input
+            className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring"
+              name="name"
+              placeholder="Name"
+              onChange={handleChange}
+              required
+            />
+             </div>
+             {/* Email */}
+            <div>
+              <label htmlFor="email" className="block mb-1 font-semibold text-gray-700">Email</label>
+            <input
+            className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring"
+              type="email"
+              name="email"
+              placeholder="Email"
+              onChange={handleChange}
+              required
+            />
+             </div>
+             {/* CNIC */}
+            <div>
+              <label htmlFor="cnic" className="block mb-1 font-semibold text-gray-700">CNIC / ID Card Number</label>
+            <input
+            className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring"
+              name="cnic"
+              placeholder="CNIC"
+              onChange={handleChange}
+              required
+            />
+             </div>
+            {/* Generate Password */}
+            <div>
+              <label htmlFor="password" className="block mb-1 font-semibold text-gray-700">Generate Password</label>
+            <input
+            className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring"
+              type="password"
+              name="password"
+              placeholder="Password"
+              onChange={handleChange}
+              required
+            />
+            </div>
+            {/* Submit Button */}
+            <div className="flex justify-center items-center gap-1">
+              <span className="bg-black text-white rounded-l-md py-3 px-4 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+              </span>
+              <button
+                type="submit"
+                className="cursor-pointer bg-[#004432] text-white px-8 py-3 rounded-r-md font-semibold hover:bg-[#003522] transition"
+              >
+                REGISTER
+              </button>
+            </div>
+            {message && <p>{message}</p>}
+          </form>
+        </div>
       </section>
 
       {/* Footer */}

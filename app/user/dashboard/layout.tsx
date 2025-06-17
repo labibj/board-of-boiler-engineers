@@ -130,7 +130,7 @@ export default function DashboardLayout() {
           </Link>
           <hr className="border-t border-white w-full" />
 
-          {/* <Link
+          <Link
             href="/logout"
             className="flex items-center space-x-3 hover:text-gray-300 mt-4"
           >
@@ -141,8 +141,8 @@ export default function DashboardLayout() {
               height={20}
             />
             <span className="font-semibold tracking-wide">Logout</span>
-          </Link> */}
-          <button
+          </Link>
+          {/* <button
   onClick={() => {
     localStorage.removeItem("token");
     alert("Logged out");
@@ -150,7 +150,7 @@ export default function DashboardLayout() {
   }}
 >
   Logout
-</button>
+</button> */}
           <hr className="border-t border-white w-full" />
         </nav>
       </aside>
