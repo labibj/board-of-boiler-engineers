@@ -1,18 +1,18 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
-import { compare } from "bcryptjs";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-
-const JWT_SECRET = process.env.JWT_SECRET!;
 
 export async function POST(req: Request) {
   try {
     const { identifier, password } = await req.json();
-    const client = await clientPromise;
-    const db = client.db(); // Default DB
 
-    // Find user by CNIC or email
-    const user = await db.collection("users").findOne({
+    const client = await clientPromise;
+    const db = client.db("boiler_board");
+    const users = db.collection("users");
+
+    // Find user by email or CNIC
+    const user = await users.findOne({
       $or: [{ email: identifier }, { cnic: identifier }],
     });
 
@@ -20,21 +20,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    const isMatch = await compare(password, user.password);
-    if (!isMatch) {
-      return NextResponse.json({ message: "Invalid password" }, { status: 401 });
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (!isPasswordMatch) {
+      return NextResponse.json({ message: "Invalid credentials" }, { status: 401 });
     }
 
-    // ✅ Make sure _id is included in the JWT
     const token = jwt.sign(
-      {
-        id: user._id.toString(), // ✅ include MongoDB user ID
-      },
-      JWT_SECRET,
-      { expiresIn: "1h" }
+      { id: user._id, email: user.email },
+      process.env.JWT_SECRET!,
+      { expiresIn: "7d" }
     );
 
-    return NextResponse.json({ message: "Login successful", token });
+    return NextResponse.json({ token });
   } catch (err) {
     console.error("Login error:", err);
     return NextResponse.json({ message: "Server error" }, { status: 500 });
