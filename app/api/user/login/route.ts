@@ -1,60 +1,42 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
-import bcrypt from "bcryptjs";
+import { compare } from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-export async function POST(req: NextRequest) {
+const JWT_SECRET = process.env.JWT_SECRET!;
+
+export async function POST(req: Request) {
   try {
     const { identifier, password } = await req.json();
-
-    if (!identifier || !password) {
-      return NextResponse.json(
-        { message: "CNIC or email and password are required." },
-        { status: 400 }
-      );
-    }
-
     const client = await clientPromise;
-    const db = client.db("boiler_board");
-    const usersCollection = db.collection("users");
+    const db = client.db(); // Default DB
 
-    // Find by CNIC or email
-    const user = await usersCollection.findOne({
-      $or: [{ cnic: identifier }, { email: identifier }]
+    // Find user by CNIC or email
+    const user = await db.collection("users").findOne({
+      $or: [{ email: identifier }, { cnic: identifier }],
     });
 
     if (!user) {
-      return NextResponse.json(
-        { message: "Invalid CNIC/email or password." },
-        { status: 401 }
-      );
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      return NextResponse.json(
-        { message: "Invalid CNIC/email or password." },
-        { status: 401 }
-      );
+    const isMatch = await compare(password, user.password);
+    if (!isMatch) {
+      return NextResponse.json({ message: "Invalid password" }, { status: 401 });
     }
 
+    // ✅ Make sure _id is included in the JWT
     const token = jwt.sign(
-      { userId: user._id, cnic: user.cnic, email: user.email },
-      process.env.JWT_SECRET as string,
-      { expiresIn: "7d" }
+      {
+        id: user._id.toString(), // ✅ include MongoDB user ID
+      },
+      JWT_SECRET,
+      { expiresIn: "1h" }
     );
 
-    return NextResponse.json(
-      { message: "Login successful.", token },
-      { status: 200 }
-    );
-
-  } catch (error) {
-    console.error("Login error:", error);
-    return NextResponse.json(
-      { message: "Internal server error." },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: "Login successful", token });
+  } catch (err) {
+    console.error("Login error:", err);
+    return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }
