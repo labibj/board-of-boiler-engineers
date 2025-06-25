@@ -39,7 +39,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const email = Array.isArray(fields.email) ? fields.email[0] : fields.email ?? "";
 
-      const getFile = (f: any) => (Array.isArray(f) ? f[0] : f);
+      const getFile = (f: File | File[] | undefined): File | undefined =>
+        Array.isArray(f) ? f[0] : f;
+
       const frontIdCardFile = getFile(files.frontIdCard);
       const backIdCardFile = getFile(files.backIdCard);
       const profilePhotoFile = getFile(files.profilePhoto);
