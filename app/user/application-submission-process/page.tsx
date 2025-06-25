@@ -4,7 +4,7 @@ import { useState } from "react";
 import UserHeader from "@/app/components/UserHeader";
 import UserFooter from "@/app/components/UserFooter";
 
-// ✅ Step 1: Move formData to a constant OUTSIDE the component
+// Initial form structure
 const initialFormData = {
   certificate: "",
   fullName: "",
@@ -37,15 +37,15 @@ const initialFormData = {
   candidateDesignation: "",
   actualTime: "",
   dateStartService: "",
+  serviceLetter: null,
 };
 
-// ✅ Step 2: Define type
 type FormDataType = typeof initialFormData;
 
 export default function ApplicationSubmissionProcess() {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<FormDataType>(initialFormData);
-  const [submittedData, setSubmittedData] = useState<FormDataType | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { id, value } = e.target;
@@ -88,20 +88,67 @@ export default function ApplicationSubmissionProcess() {
         return;
       }
     }
-
     setStep((prev) => Math.min(prev + 1, 3));
   };
 
   const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
 
-  const handleSubmit = () => {
-    setSubmittedData(formData);
-    alert("Form submitted successfully!");
-    console.log("Submitted Data:", formData);
+  const handleSubmit = async () => {
+    try {
+      setSubmitting(true);
 
-    // ✅ Use submittedData to avoid ESLint warning
-    console.log("Saved in state (submittedData):", submittedData);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("You must be logged in to submit the form.");
+        return;
+      }
+
+      const submission = new FormData();
+
+      for (const key in formData) {
+        const value = formData[key as keyof FormDataType];
+
+        if (value !== null && value !== undefined) {
+          // File detection fallback (SSR-safe and type-safe)
+          if (
+            value &&
+            typeof value === "object" &&
+            "name" in value &&
+            "size" in value &&
+            "type" in value
+          ) {
+            submission.append(key, value as File);
+          } else {
+            submission.append(key, String(value));
+          }
+        }
+      }
+
+      const res = await fetch("/api/applications/submit", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: submission,
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert("Application submitted successfully!");
+        setFormData(initialFormData);
+        setStep(1);
+      } else {
+        console.error(data);
+        alert("Failed to submit application.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("An error occurred while submitting.");
+    } finally {
+      setSubmitting(false);
+    }
   };
+
   return (
     <>
       <UserHeader />
@@ -337,8 +384,15 @@ export default function ApplicationSubmissionProcess() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                   </svg>
                 </span>
-                <button type="button" onClick={handleSubmit} className="cursor-pointer bg-[#004432] text-white px-8 py-3 rounded-r-md font-semibold hover:bg-[#003522] transition">
-                  SUBMIT
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className={`cursor-pointer px-8 py-3 rounded-r-md font-semibold transition ${
+                    submitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#004432] text-white hover:bg-[#003522]'
+                  }`}
+                >
+                  {submitting ? "Submitting..." : "SUBMIT"}
                 </button>
               </div>
             </div>

@@ -74,7 +74,7 @@ export default function Header() {
             {/* Registration/Login button - visible only on large screens */}
             <div className="flex justify-center lg:justify-end">
               <a
-                href="/login"
+                href="/user/register"
                 className="hidden lg:inline-block bg-[#004432] text-white px-4 py-3 rounded-tl-lg rounded-br-lg hover:bg-[#03614d] font-medium whitespace-nowrap transition text-sm sm:text-base"
               >
                 Registration / Login
