@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDB } from "@/lib/mongodb";
+import clientPromise from "@/lib/mongodb"; // ✅ Use clientPromise directly
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
@@ -10,36 +10,30 @@ export async function POST(req: NextRequest) {
   try {
     const { email, password } = await req.json();
 
-    // ✅ Debug incoming request
-
     console.log("Received login request with:", email, password);
 
     if (!email || !password) {
       return NextResponse.json({ message: "Email and password required" }, { status: 400 });
     }
 
-    const db = await getDB();
-    const admin = await db.collection("admins").findOne({ email });
+    const normalizedEmail = email.toLowerCase();
 
-    // ✅ Debug fetched admin
+    const client = await clientPromise;
+    const db = client.db("boiler_board"); // ✅ Ensure this matches MongoDB database name
+    const admin = await db.collection("admins").findOne({ email: normalizedEmail });
 
     console.log("Admin found in DB:", admin);
 
     if (!admin || !admin.password) {
       console.log("Invalid credentials: admin not found or no password.");
-
       return NextResponse.json({ message: "Invalid credentials" }, { status: 401 });
     }
 
     const isMatch = await bcrypt.compare(password, admin.password);
-
-    // ✅ Debug password match
-
     console.log("Password match:", isMatch);
 
     if (!isMatch) {
       console.log("Invalid credentials: password mismatch.");
-      
       return NextResponse.json({ message: "Invalid credentials" }, { status: 401 });
     }
 
