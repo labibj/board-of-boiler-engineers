@@ -100,7 +100,7 @@ export default function DashboardLayout() {
           </h1>
           <div className="flex items-center space-x-4 text-gray-700">
             <FaBell className="w-5 h-5 cursor-pointer" />
-            <FaSignOutAlt className="w-5 h-5 cursor-pointer" />
+            <FaSignOutAlt className="w-5 h-5 cursor-pointer" onClick={() => handleLogout("/user/login")} />
             <FaEllipsisV className="w-5 h-5 cursor-pointer" />
           </div>
         </div>

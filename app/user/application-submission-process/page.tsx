@@ -18,7 +18,7 @@ const initialFormData = {
   year: "",
   idCardNumber: "",
   departmentName: "",
-  qualification: "",
+  qualification: "", // This field is not used in the current form, but kept for consistency
   degreeDay: "",
   degreeMonth: "",
   degreeYear: "",
@@ -26,7 +26,8 @@ const initialFormData = {
   backIdCard: null,
   profilePhoto: null,
   feeSlip: null,
-  certificateDiploma: "",
+  certificateDiploma: "", // This is for the select input
+  certificateDiplomaFile: null, // New: For the actual file upload
   issueDay: "",
   issueMonth: "",
   issueYear: "",
@@ -37,7 +38,7 @@ const initialFormData = {
   candidateDesignation: "",
   actualTime: "",
   dateStartService: "",
-  serviceLetter: null,
+  serviceLetter: null, // New: For the service letter file upload
 };
 
 type FormDataType = typeof initialFormData;
@@ -87,6 +88,22 @@ export default function ApplicationSubmissionProcess() {
         alert("Please fill out all required fields and upload files in Step 1.");
         return;
       }
+    } else if (step === 2) {
+      const {
+        departmentName,
+        degreeDay,
+        degreeMonth,
+        degreeYear,
+        certificateDiplomaFile, // Check for this new file
+      } = formData;
+
+      if (
+        !departmentName || !degreeDay || !degreeMonth || !degreeYear ||
+        !certificateDiplomaFile
+      ) {
+        alert("Please fill out all required fields and upload the certificate/diploma file in Step 2.");
+        return;
+      }
     }
     setStep((prev) => Math.min(prev + 1, 3));
   };
@@ -124,10 +141,10 @@ export default function ApplicationSubmissionProcess() {
         }
       }
 
-      const res = await fetch("/api/applications/submit", {
+      const res = await fetch("/api/user/submit-application", { // Corrected API path
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`, // Corrected template literal
         },
         body: submission,
       });
@@ -272,7 +289,7 @@ export default function ApplicationSubmissionProcess() {
           </h6>
                 <div className="space-y-4">
                              <div>
-                  <label htmlFor="Certificate-diplome-degree" className="block mb-1 font-semibold text-gray-700">Certificate. Diploma or Degree</label>
+                  <label htmlFor="certificateDiploma" className="block mb-1 font-semibold text-gray-700">Certificate. Diploma or Degree</label>
                   <select value={formData.certificateDiploma} onChange={handleChange} id="certificateDiploma" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]">
                     <option value="">Select Option</option>
                     <option value="option1">Matric</option>
@@ -280,7 +297,7 @@ export default function ApplicationSubmissionProcess() {
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="Name-of-department" className="block mb-1 font-semibold text-gray-700">Name of School. Institute. University</label>
+                  <label htmlFor="departmentName" className="block mb-1 font-semibold text-gray-700">Name of School. Institute. University</label>
                   <input value={formData.departmentName} onChange={handleChange} type="text" id="departmentName" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
                 </div>
                 <div>
@@ -294,7 +311,8 @@ export default function ApplicationSubmissionProcess() {
                       <div>
           <label className="block mb-1 font-semibold text-gray-700">Upload Certificate. Diploma / Degree</label>
                 <div className="flex flex-col md:flex-row">
-                  <input onChange={handleFileChange} type="file" className="flex-grow border border-black rounded-l-md px-3 py-2 focus:outline-none mb-2 md:mb-0" accept="image/*" />
+                  {/* Added id="certificateDiplomaFile" here */}
+                  <input id="certificateDiplomaFile" onChange={handleFileChange} type="file" className="flex-grow border border-black rounded-l-md px-3 py-2 focus:outline-none mb-2 md:mb-0" accept="image/*,application/pdf" />
                   <button type="button" className="bg-[#004432] px-4 py-2 rounded-r-md border text-white cursor-pointer md:ml-2">Browse</button>
                 </div>
               </div>
@@ -334,7 +352,7 @@ export default function ApplicationSubmissionProcess() {
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="biolerRegistry" className="block mb-1 font-semibold text-gray-700">Boiler Registry/Maker No.</label>
+                  <label htmlFor="biolerRegistryNo" className="block mb-1 font-semibold text-gray-700">Boiler Registry/Maker No.</label>
                   <input value={formData.biolerRegistryNo} onChange={handleChange} type="text" id="biolerRegistryNo" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
                 </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -348,7 +366,7 @@ export default function ApplicationSubmissionProcess() {
                 </div>
               </div>
                               <div>
-                  <label htmlFor="biolerRegistry" className="block mb-1 font-semibold text-gray-700">Boiler Registry/Maker No.</label>
+                  <label htmlFor="biolerRegistryNo" className="block mb-1 font-semibold text-gray-700">Boiler Registry/Maker No.</label>
                   <input value={formData.biolerRegistryNo} onChange={handleChange} type="text" id="biolerRegistryNo" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
                 </div>
                                 <div>
@@ -372,7 +390,8 @@ export default function ApplicationSubmissionProcess() {
                             <div>
                 <label className="block mb-1 font-semibold text-gray-700">Upload Service Letter</label>
                 <div className="flex flex-col md:flex-row">
-                  <input onChange={handleFileChange} type="file" className="flex-grow border border-black rounded-l-md px-3 py-2 focus:outline-none mb-2 md:mb-0" accept="image/*" />
+                  {/* Added id="serviceLetter" here */}
+                  <input id="serviceLetter" onChange={handleFileChange} type="file" className="flex-grow border border-black rounded-l-md px-3 py-2 focus:outline-none mb-2 md:mb-0" accept="image/*,application/pdf" />
                   <button type="button" className="bg-[#004432] px-4 py-2 rounded-r-md border text-white cursor-pointer md:ml-2">Browse</button>
                 </div>
               </div>

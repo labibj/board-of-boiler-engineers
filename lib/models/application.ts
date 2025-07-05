@@ -19,11 +19,12 @@ export interface ApplicationData {
   degreeDay?: string;
   degreeMonth?: string;
   degreeYear?: string;
-  frontIdCard?: string | null;
-  backIdCard?: string | null;
-  profilePhoto?: string | null;
-  feeSlip?: string | null;
+  frontIdCard?: string | null; // Changed to allow null
+  backIdCard?: string | null;  // Changed to allow null
+  profilePhoto?: string | null; // Changed to allow null
+  feeSlip?: string | null;      // Changed to allow null
   certificateDiploma?: string;
+  certificateDiplomaFile?: string | null; // Added and changed to allow null
   issueDay?: string;
   issueMonth?: string;
   issueYear?: string;
@@ -34,7 +35,7 @@ export interface ApplicationData {
   candidateDesignation?: string;
   actualTime?: string;
   dateStartService?: string;
-  serviceLetter?: string;
+  serviceLetter?: string | null; // Changed to allow null
   submittedBy?: {
     userId: string;
     email: string;
