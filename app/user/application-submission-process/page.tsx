@@ -18,7 +18,7 @@ const initialFormData = {
   year: "",
   idCardNumber: "",
   departmentName: "",
-  qualification: "", // This field is not used in the current form, but kept for consistency
+  qualification: "",
   degreeDay: "",
   degreeMonth: "",
   degreeYear: "",
@@ -26,8 +26,8 @@ const initialFormData = {
   backIdCard: null,
   profilePhoto: null,
   feeSlip: null,
-  certificateDiploma: "", // This is for the select input
-  certificateDiplomaFile: null, // New: For the actual file upload
+  certificateDiploma: "",
+  certificateDiplomaFile: null, // For the actual file upload
   issueDay: "",
   issueMonth: "",
   issueYear: "",
@@ -38,7 +38,7 @@ const initialFormData = {
   candidateDesignation: "",
   actualTime: "",
   dateStartService: "",
-  serviceLetter: null, // New: For the service letter file upload
+  serviceLetter: null, // For the service letter file upload
 };
 
 type FormDataType = typeof initialFormData;
@@ -94,7 +94,7 @@ export default function ApplicationSubmissionProcess() {
         degreeDay,
         degreeMonth,
         degreeYear,
-        certificateDiplomaFile, // Check for this new file
+        certificateDiplomaFile,
       } = formData;
 
       if (
@@ -117,6 +117,7 @@ export default function ApplicationSubmissionProcess() {
       const token = localStorage.getItem("token");
       if (!token) {
         alert("You must be logged in to submit the form.");
+        setSubmitting(false); // Ensure submitting state is reset
         return;
       }
 
@@ -141,10 +142,11 @@ export default function ApplicationSubmissionProcess() {
         }
       }
 
-      const res = await fetch("/api/user/submit-application", { // Corrected API path
+      const res = await fetch("/api/user/submit-application", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`, // Corrected template literal
+          // IMPORTANT: Ensure this is a template literal for correct string interpolation
+          'Authorization': `Bearer ${token}`,
         },
         body: submission,
       });
@@ -155,11 +157,11 @@ export default function ApplicationSubmissionProcess() {
         setFormData(initialFormData);
         setStep(1);
       } else {
-        console.error(data);
-        alert("Failed to submit application.");
+        console.error("Submission failed:", data);
+        alert(`Failed to submit application: ${data.error || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error(error);
+      console.error("An error occurred during submission:", error);
       alert("An error occurred while submitting.");
     } finally {
       setSubmitting(false);
@@ -311,7 +313,6 @@ export default function ApplicationSubmissionProcess() {
                       <div>
           <label className="block mb-1 font-semibold text-gray-700">Upload Certificate. Diploma / Degree</label>
                 <div className="flex flex-col md:flex-row">
-                  {/* Added id="certificateDiplomaFile" here */}
                   <input id="certificateDiplomaFile" onChange={handleFileChange} type="file" className="flex-grow border border-black rounded-l-md px-3 py-2 focus:outline-none mb-2 md:mb-0" accept="image/*,application/pdf" />
                   <button type="button" className="bg-[#004432] px-4 py-2 rounded-r-md border text-white cursor-pointer md:ml-2">Browse</button>
                 </div>
@@ -390,7 +391,6 @@ export default function ApplicationSubmissionProcess() {
                             <div>
                 <label className="block mb-1 font-semibold text-gray-700">Upload Service Letter</label>
                 <div className="flex flex-col md:flex-row">
-                  {/* Added id="serviceLetter" here */}
                   <input id="serviceLetter" onChange={handleFileChange} type="file" className="flex-grow border border-black rounded-l-md px-3 py-2 focus:outline-none mb-2 md:mb-0" accept="image/*,application/pdf" />
                   <button type="button" className="bg-[#004432] px-4 py-2 rounded-r-md border text-white cursor-pointer md:ml-2">Browse</button>
                 </div>
