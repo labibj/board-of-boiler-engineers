@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     const normalizedEmail = email.toLowerCase();
 
     const client = await clientPromise;
-    const db = client.db("boiler_board"); // ✅ Ensure this matches MongoDB database name
+    const db = client.db("boiler_board"); // ✅ Make sure this matches your DB name
     const admin = await db.collection("admins").findOne({ email: normalizedEmail });
 
     console.log("Admin found in DB:", admin);
@@ -29,8 +29,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Invalid credentials" }, { status: 401 });
     }
 
+    // 🔍 DEBUG: Print stored hash and entered password
+    console.log("🔐 Stored hash from DB:", admin.password);
+    console.log("🔐 Entered plain password:", password);
+
     const isMatch = await bcrypt.compare(password, admin.password);
-    console.log("Password match:", isMatch);
+    console.log("✅ Password match:", isMatch);
 
     if (!isMatch) {
       console.log("Invalid credentials: password mismatch.");
@@ -41,7 +45,6 @@ export async function POST(req: NextRequest) {
       expiresIn: "1d",
     });
 
-    // ✅ Fix: await cookies
     const cookieStore = await cookies();
     cookieStore.set("admin-token", token, {
       httpOnly: true,
@@ -50,11 +53,11 @@ export async function POST(req: NextRequest) {
       maxAge: 60 * 60 * 24,
     });
 
-    console.log("Login successful, token set in cookie.");
+    console.log("🎉 Login successful, token set in cookie.");
 
     return NextResponse.json({ message: "Login successful" }, { status: 200 });
   } catch (error) {
-    console.error("Login Error:", error);
+    console.error("🔥 Login Error:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 }
