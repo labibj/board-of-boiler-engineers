@@ -145,8 +145,7 @@ export default function ApplicationSubmissionProcess() {
       const res = await fetch("/api/user/submit-application", {
         method: "POST",
         headers: {
-          // IMPORTANT: Ensure this is a template literal for correct string interpolation
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`, // Corrected template literal
         },
         body: submission,
       });
