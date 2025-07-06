@@ -14,12 +14,12 @@ interface JwtPayload {
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
-    const token = req.cookies.get("token")?.value;
+    // CHANGE HERE: Read token from Authorization header instead of cookies
+    const token = req.headers.get('authorization')?.replace('Bearer ', '');
 
     if (!token) {
-      // Log for server-side debugging
-      console.error("Authorization Error: No token found in cookies.");
-      return NextResponse.json({ error: "Unauthorized: No token provided." }, { status: 401 });
+      console.error("Authorization Error: No token found in Authorization header.");
+      return NextResponse.json({ error: "Unauthorized: No token provided in Authorization header." }, { status: 401 });
     }
 
     let decoded: JwtPayload;
@@ -37,7 +37,6 @@ export async function POST(req: NextRequest) {
     // Extract all form fields (text + files)
     const fields: Record<string, string> = {};
     formData.forEach((value, key) => {
-      // Only store non-file fields as strings
       if (typeof value === "string") {
         fields[key] = value;
       }
@@ -45,27 +44,23 @@ export async function POST(req: NextRequest) {
 
     // Helper function to upload file to Cloudinary
     const uploadFile = async (file: FormDataEntryValue | null): Promise<string | null> => {
-      // Check if the value is actually a File object
       if (!file || !(file instanceof File)) {
         console.warn(`Skipping upload for non-file or null value: ${file}`);
         return null;
       }
 
-      // Convert file to base64 data URI
       const buffer = Buffer.from(await file.arrayBuffer());
       const base64 = buffer.toString("base64");
       const mime = file.type;
       const dataUri = `data:${mime};base64,${base64}`;
 
       try {
-        // Upload to Cloudinary
         const uploaded = await cloudinary.uploader.upload(dataUri, {
-          folder: "boiler-applications", // Specify a folder in Cloudinary
+          folder: "boiler-applications",
         });
-        return uploaded.secure_url; // Return the secure URL of the uploaded file
+        return uploaded.secure_url;
       } catch (cloudinaryError) {
         console.error(`Cloudinary upload failed for file type ${mime}:`, cloudinaryError);
-        // Depending on your error handling strategy, you might want to throw or return null
         return null;
       }
     };
@@ -80,21 +75,19 @@ export async function POST(req: NextRequest) {
 
     // Prepare application data for storage
     const applicationData = {
-      ...fields, // Include all text fields
+      ...fields,
       frontIdCard: frontIdCardUrl,
       backIdCard: backIdCardUrl,
       profilePhoto: profilePhotoUrl,
       feeSlip: feeSlipUrl,
       certificateDiplomaFile: certificateDiplomaFileUrl,
       serviceLetter: serviceLetterUrl,
-      submittedBy: { userId, email: userEmail }, // User who submitted the application
-      submittedAt: new Date(), // Timestamp of submission
+      submittedBy: { userId, email: userEmail },
+      submittedAt: new Date(),
     };
 
-    // Create the application entry in your database (e.g., MongoDB)
     const result = await createApplication(applicationData);
 
-    // Respond with success
     return NextResponse.json({ success: true, id: result.insertedId });
   } catch (err) {
     console.error("Form Submission Error:", err);
