@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import clientPromise from "@/lib/mongodb"; // ✅ Use clientPromise directly
+import clientPromise from "@/lib/mongodb";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { cookies } from "next/headers";
+// import { cookies } from "next/headers"; // Removed, as we're returning token in body
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
@@ -19,7 +19,8 @@ export async function POST(req: NextRequest) {
     const normalizedEmail = email.toLowerCase();
 
     const client = await clientPromise;
-    const db = client.db("boiler_board"); // ✅ Make sure this matches your DB name
+    // Ensure this matches the DB name in your MONGODB_URI or MONGODB_DB_NAME env var
+    const db = client.db(process.env.MONGODB_DB_NAME || "boiler_board"); // Using MONGODB_DB_NAME from env
     const admin = await db.collection("admins").findOne({ email: normalizedEmail });
 
     console.log("Admin found in DB:", admin);
@@ -41,21 +42,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Invalid credentials" }, { status: 401 });
     }
 
-    const token = jwt.sign({ email: admin.email, role: "admin" }, JWT_SECRET, {
-      expiresIn: "1d",
-    });
+    // CHANGE 1: Include admin._id in the JWT payload
+    // CHANGE 2: Ensure the payload matches the expected JwtPayload interface in other APIs
+    const token = jwt.sign(
+      {
+        _id: admin._id.toString(), // Convert ObjectId to string for JWT consistency
+        email: admin.email,
+        role: "admin",
+      },
+      JWT_SECRET,
+      {
+        expiresIn: "1d",
+      }
+    );
 
-    const cookieStore = await cookies();
-    cookieStore.set("admin-token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 60 * 60 * 24,
-    });
+    // CHANGE 3: Return the token in the response body instead of setting a cookie
+    console.log("🎉 Login successful, returning token in response.");
+    return NextResponse.json({ message: "Login successful", token: token }, { status: 200 });
 
-    console.log("🎉 Login successful, token set in cookie.");
-
-    return NextResponse.json({ message: "Login successful" }, { status: 200 });
   } catch (error) {
     console.error("🔥 Login Error:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
