@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
 import { insertManyResults, getAllResults, deleteAllResults, ResultData } from "@/lib/models/result";
 import jwt from "jsonwebtoken";
-import { Readable } from "stream"; // Node.js stream for parsing CSV
+import { Readable } from "stream";
 import csv from "csv-parser"; // Make sure to install: npm install csv-parser
 
 // Define JWT payload type (assuming admin users have similar payload)
@@ -14,23 +14,16 @@ interface JwtPayload {
   exp?: number;
 }
 
-// Helper to convert ReadableStream to string
-async function streamToString(stream: Readable): Promise<string> {
-  const chunks: Buffer[] = [];
-  return new Promise((resolve, reject) => {
-    stream.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
-    stream.on('error', (err) => reject(err));
-    stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
-  });
-}
+// Removed unused 'streamToString' function
 
 // Helper to parse CSV string into an array of objects
-async function parseCsvString(csvString: string): Promise<any[]> {
-  const results: any[] = [];
+// Changed 'any[]' to 'Record<string, string>[]' for better type specificity
+async function parseCsvString(csvString: string): Promise<Record<string, string>[]> {
+  const results: Record<string, string>[] = [];
   return new Promise((resolve, reject) => {
     Readable.from(csvString)
       .pipe(csv())
-      .on('data', (data) => results.push(data))
+      .on('data', (data: Record<string, string>) => results.push(data)) // Specify type for 'data'
       .on('end', () => resolve(results))
       .on('error', (err) => reject(err));
   });
@@ -95,7 +88,7 @@ export async function POST(req: NextRequest) {
 
     // 4. Parse CSV content
     const csvString = buffer.toString('utf-8'); // Convert buffer to string for parsing
-    let parsedResults: any[];
+    let parsedResults: Record<string, string>[]; // Changed 'any[]' to 'Record<string, string>[]'
     try {
       parsedResults = await parseCsvString(csvString);
     } catch (parseError) {
@@ -105,7 +98,7 @@ export async function POST(req: NextRequest) {
 
     // 5. Map parsed data to ResultData interface and add metadata
     const resultsToSave: ResultData[] = parsedResults.map(row => ({
-      rollNumber: row['Roll Number'] || '', // Match CSV header names
+      rollNumber: row['Roll Number'] || '', // Match CSV header names from your sample
       candidateName: row['Candidate Name'] || '',
       certificate: row['Certificate'] || '',
       dateOfExam: row['Date of Exam'] || '',

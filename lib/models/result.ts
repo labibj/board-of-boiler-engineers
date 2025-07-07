@@ -27,7 +27,7 @@ export interface ResultData {
 // Function to get the results collection
 async function getResultsCollection(): Promise<Collection<ResultData>> {
   const client = await clientPromise;
-  const db = client.db();
+  const db = client.db(process.env.MONGODB_DB_NAME || "boiler-engineers"); // Use DB name from env or default
   return db.collection<ResultData>("results");
 }
 
@@ -35,8 +35,9 @@ async function getResultsCollection(): Promise<Collection<ResultData>> {
 export async function insertManyResults(results: ResultData[]) {
   const collection = await getResultsCollection();
   // Ensure that _id is not present for new inserts, MongoDB will add it
+  // Renamed '_id' to '_' to avoid 'unused variable' linting error
   const resultsToInsert = results.map(result => {
-    const { _id, ...rest } = result; // Destructure to exclude _id
+    const { _id: _, ...rest } = result; // Destructure to exclude _id and ignore it
     return rest;
   });
   const insertResult = await collection.insertMany(resultsToInsert);
