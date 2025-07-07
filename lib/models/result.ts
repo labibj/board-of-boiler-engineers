@@ -34,12 +34,16 @@ async function getResultsCollection(): Promise<Collection<ResultData>> {
 // Function to insert multiple results (e.g., from a CSV upload)
 export async function insertManyResults(results: ResultData[]) {
   const collection = await getResultsCollection();
-  // Ensure that _id is not present for new inserts, MongoDB will add it
-  // Renamed '_id' to '_' to avoid 'unused variable' linting error
+  // Ensure that _id is not present for new inserts, MongoDB will add it.
+  // Create a shallow copy and delete _id if it exists, to satisfy strict linting.
   const resultsToInsert = results.map(result => {
-    const { _id: _, ...rest } = result; // Destructure to exclude _id and ignore it
-    return rest;
+    const newResult = { ...result }; // Create a shallow copy of the result object
+    if (newResult._id) {
+      delete newResult._id; // Delete the _id property from the copy
+    }
+    return newResult;
   });
+
   const insertResult = await collection.insertMany(resultsToInsert);
   return insertResult;
 }
