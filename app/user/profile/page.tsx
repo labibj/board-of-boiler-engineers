@@ -62,7 +62,8 @@ export default function Profile() {
       const data = await res.json();
       if (res.ok) {
         setFormData(data.data); // Populate form with fetched data
-        setDisplayedImageUrl(data.data.profilePhoto || "/profile-photo.png"); // Set initial display image
+        // Use the profilePhoto from fetched data, or default if null/undefined
+        setDisplayedImageUrl(data.data.profilePhoto || "/profile-photo.png");
       } else {
         setMessage(`Failed to load profile: ${data.error || 'Unknown error'}`);
         console.error("Failed to fetch user profile:", data);
@@ -84,16 +85,13 @@ export default function Profile() {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedImageFile(file); // Store the actual file
-      setDisplayedImageUrl(URL.createObjectURL(file)); // Create URL for immediate display
+      setDisplayedImageUrl(URL.createObjectURL(file)); // Create temporary URL for immediate display
     } else {
       setSelectedImageFile(null);
       // If no file selected, revert to current profile photo or default
       setDisplayedImageUrl(formData.profilePhoto || "/profile-photo.png");
     }
   };
-
-  // Removed the unused handleChange function completely.
-  // If you add editable text fields later, you'll re-add and use it.
 
   // ✅ Submit handler for updating profile (mainly photo for now)
   const handleUpdate = async (e: React.FormEvent) => {
@@ -111,27 +109,20 @@ export default function Profile() {
     const updateFormData = new FormData();
     if (selectedImageFile) {
       updateFormData.append("profilePhotoFile", selectedImageFile); // 'profilePhotoFile' matches backend expected name
-    }
-    // If you had other editable fields, you'd append them here:
-    // updateFormData.append("name", formData.name);
-    // updateFormData.append("email", formData.email);
-    // updateFormData.append("cnic", formData.cnic);
-
-    if (!selectedImageFile) { // If only photo upload is implemented, check if a file is selected
+    } else {
+        // If no new file is selected, but update is triggered, prevent unnecessary API call
         setMessage("Please select a new photo to update.");
         setUpdatingProfile(false);
         return;
     }
 
-
     try {
-      const res = await fetch("/api/user/profile", { // Changed to /api/user/profile
+      const res = await fetch("/api/user/profile", {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
-          // 'Content-Type': 'multipart/form-data' is NOT needed for FormData, browser sets it automatically
         },
-        body: updateFormData, // Send FormData directly
+        body: updateFormData,
       });
 
       const data = await res.json();
@@ -139,8 +130,8 @@ export default function Profile() {
         setMessage("✅ Profile updated successfully!");
         // Update the displayed image URL with the new URL from backend
         if (data.profilePhotoUrl) {
-            setDisplayedImageUrl(data.profilePhotoUrl);
-            setFormData(prev => ({ ...prev, profilePhoto: data.profilePhotoUrl })); // Update formData state too
+            setDisplayedImageUrl(data.profilePhotoUrl); // Update the state that holds the URL for the Image component
+            setFormData(prev => ({ ...prev, profilePhoto: data.profilePhotoUrl })); // Also update formData's profilePhoto
         }
         setSelectedImageFile(null); // Clear the selected file input
       } else {
@@ -254,7 +245,9 @@ export default function Profile() {
                 <div className="flex flex-col items-center mb-6">
                     <div className="w-32 h-32 rounded-xl overflow-hidden bg-gray-200 shadow relative border-2 border-gray-300">
                         <Image
-                            src={displayedImageUrl || "/profile-photo.png"} // Use displayedImageUrl
+                            // CRUCIAL FIX: Add a key prop that changes with the image URL
+                            key={displayedImageUrl || "default-profile-photo"}
+                            src={displayedImageUrl || "/profile-photo.png"}
                             alt="Profile Photo"
                             width={128}
                             height={128}
