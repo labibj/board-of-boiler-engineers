@@ -92,13 +92,8 @@ export default function Profile() {
     }
   };
 
-  // ✅ Handle form input changes (for other potential fields, though not explicitly in current form)
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // This part is for text inputs like name, email, cnic if they were editable
-    // For now, these are displayed from formData, not directly editable by this form handler.
-    // If you add editable text fields, you'd update this.
-    // setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  // Removed the unused handleChange function completely.
+  // If you add editable text fields later, you'll re-add and use it.
 
   // ✅ Submit handler for updating profile (mainly photo for now)
   const handleUpdate = async (e: React.FormEvent) => {
