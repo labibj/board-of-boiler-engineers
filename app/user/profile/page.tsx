@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { sidebarLinks } from "@/app/data/sidebarLinks";
 import { handleLogout } from "@/app/utils/logout";
 import useAuthRedirect from "@/app/hooks/useAuthRedirect";
@@ -14,68 +14,159 @@ import {
 } from "react-icons/fa";
 import UserFooter from "@/app/components/UserFooter";
 
+// Define the type for user profile data fetched from backend
+interface UserProfileData {
+  name: string;
+  email: string;
+  cnic: string;
+  profilePhoto: string | null;
+  // Add other fields you fetch and display here
+}
+
 export default function Profile() {
   useAuthRedirect(); // 👈 Ensures user is logged in
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null); // To hold the actual file object
+  const [displayedImageUrl, setDisplayedImageUrl] = useState<string | null>(null); // To hold the URL for Image component
   const [message, setMessage] = useState("");
+  const [loadingProfile, setLoadingProfile] = useState(true); // New loading state for profile data
+  const [updatingProfile, setUpdatingProfile] = useState(false); // New loading state for update
 
-  // ✅ Form state
-  const [formData, setFormData] = useState({
+  // ✅ Form state initialized with empty strings, will be populated by fetched data
+  const [formData, setFormData] = useState<UserProfileData>({
     name: "",
-    fatherName: "",
     email: "",
-    dob: "",
-    phone: "",
-    presentAddress: "",
-    permanentAddress: "",
+    cnic: "",
+    profilePhoto: null,
   });
+
+  // Function to fetch user profile data
+  const fetchUserProfile = async () => {
+    setLoadingProfile(true);
+    setMessage("");
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setMessage("User not authenticated. Please log in.");
+        setLoadingProfile(false);
+        return;
+      }
+
+      const res = await fetch("/api/user/profile", {
+        method: "GET",
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setFormData(data.data); // Populate form with fetched data
+        setDisplayedImageUrl(data.data.profilePhoto || "/profile-photo.png"); // Set initial display image
+      } else {
+        setMessage(`Failed to load profile: ${data.error || 'Unknown error'}`);
+        console.error("Failed to fetch user profile:", data);
+      }
+    } catch (err) {
+      console.error("Fetch profile error:", err);
+      setMessage("An error occurred while loading profile.");
+    } finally {
+      setLoadingProfile(false);
+    }
+  };
+
+  // Fetch profile data on component mount
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setSelectedImage(imageUrl);
+      setSelectedImageFile(file); // Store the actual file
+      setDisplayedImageUrl(URL.createObjectURL(file)); // Create URL for immediate display
+    } else {
+      setSelectedImageFile(null);
+      // If no file selected, revert to current profile photo or default
+      setDisplayedImageUrl(formData.profilePhoto || "/profile-photo.png");
     }
   };
 
-  // ✅ Handle form input changes
+  // ✅ Handle form input changes (for other potential fields, though not explicitly in current form)
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    // This part is for text inputs like name, email, cnic if they were editable
+    // For now, these are displayed from formData, not directly editable by this form handler.
+    // If you add editable text fields, you'd update this.
+    // setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // ✅ Submit handler
+  // ✅ Submit handler for updating profile (mainly photo for now)
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
+    setUpdatingProfile(true);
 
     const token = localStorage.getItem("token");
     if (!token) {
       setMessage("❌ User not authenticated.");
+      setUpdatingProfile(false);
       return;
     }
 
+    const updateFormData = new FormData();
+    if (selectedImageFile) {
+      updateFormData.append("profilePhotoFile", selectedImageFile); // 'profilePhotoFile' matches backend expected name
+    }
+    // If you had other editable fields, you'd append them here:
+    // updateFormData.append("name", formData.name);
+    // updateFormData.append("email", formData.email);
+    // updateFormData.append("cnic", formData.cnic);
+
+    if (!selectedImageFile) { // If only photo upload is implemented, check if a file is selected
+        setMessage("Please select a new photo to update.");
+        setUpdatingProfile(false);
+        return;
+    }
+
+
     try {
-      const res = await fetch("/api/user/update", {
+      const res = await fetch("/api/user/profile", { // Changed to /api/user/profile
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
+          // 'Content-Type': 'multipart/form-data' is NOT needed for FormData, browser sets it automatically
         },
-        body: JSON.stringify(formData),
+        body: updateFormData, // Send FormData directly
       });
 
       const data = await res.json();
       if (res.ok) {
         setMessage("✅ Profile updated successfully!");
+        // Update the displayed image URL with the new URL from backend
+        if (data.profilePhotoUrl) {
+            setDisplayedImageUrl(data.profilePhotoUrl);
+            setFormData(prev => ({ ...prev, profilePhoto: data.profilePhotoUrl })); // Update formData state too
+        }
+        setSelectedImageFile(null); // Clear the selected file input
       } else {
-        setMessage(`❌ ${data.message}`);
+        setMessage(`❌ ${data.error || data.message || 'Failed to update profile.'}`);
+        console.error("Update error:", data);
       }
     } catch (err) {
       console.error("Update error:", err);
-      setMessage("❌ Something went wrong.");
+      setMessage("❌ An error occurred while updating profile.");
+    } finally {
+      setUpdatingProfile(false);
     }
   };
+
+  if (loadingProfile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <p className="text-lg text-[#004432]">Loading profile...</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -99,7 +190,7 @@ export default function Profile() {
               <FaTimes size={20} />
             </button>
           </div>
-  
+          
           <div className="flex flex-col items-center mb-8">
             <Link href="/user/dashboard">
               <Image
@@ -161,125 +252,74 @@ export default function Profile() {
 
           {/* Profile Form Content */}
           <div className="flex-1 p-4 sm:p-6 md:p-8 bg-white">
-            <div className="flex flex-col items-center mb-6">
-              <div className="w-32 h-32 rounded-xl overflow-hidden bg-gray-200 shadow relative">
-                <Image
-                  src={selectedImage || "/profile-photo.png"}
-                  alt="Profile Photo"
-                  width={128}
-                  height={128}
-                  className="object-cover w-full h-full"
-                />
-              </div>
+            <form onSubmit={handleUpdate} className="max-w-xl mx-auto bg-gray-50 p-6 rounded-lg shadow-md">
+                <h2 className="text-2xl font-bold text-[#004432] mb-6 text-center">Your Profile</h2>
 
-              <input
-                id="profileUpload"
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
-              />
-              <label
-                htmlFor="profileUpload"
-                className="mt-2 text-sm text-[#004432] underline cursor-pointer font-bold"
-              >
-                Change Photo
-              </label>
-            </div>
-
-            {/* ✅ Form connected to state */}
-            <form
-              onSubmit={handleUpdate}
-              className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4"
-            >
-              <input
-                type="text"
-                name="name"
-                placeholder="Name"
-                value={formData.name}
-                onChange={handleChange}
-                className="w-full border border-black rounded-md px-3 py-2"
-              />
-              <input
-                type="text"
-                name="fatherName"
-                placeholder="Father Name"
-                value={formData.fatherName}
-                onChange={handleChange}
-                className="w-full border border-black rounded-md px-3 py-2"
-              />
-              <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                value={formData.email}
-                onChange={handleChange}
-                className="col-span-1 md:col-span-2 border border-black rounded-md px-3 py-2"
-              />
-              <input
-                type="date"
-                name="dob"
-                placeholder="Date of Birth"
-                value={formData.dob}
-                onChange={handleChange}
-                className="w-full border border-black rounded-md px-3 py-2"
-              />
-              <input
-                type="tel"
-                name="phone"
-                placeholder="Phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className="w-full border border-black rounded-md px-3 py-2"
-              />
-              <input
-                type="text"
-                name="presentAddress"
-                placeholder="Present Address"
-                value={formData.presentAddress}
-                onChange={handleChange}
-                className="col-span-1 md:col-span-2 border border-black rounded-md px-3 py-2"
-              />
-              <input
-                type="text"
-                name="permanentAddress"
-                placeholder="Permanent Address"
-                value={formData.permanentAddress}
-                onChange={handleChange}
-                className="col-span-1 md:col-span-2 border border-black rounded-md px-3 py-2"
-              />
-
-              {/* ✅ Submit Button */}
-              <div className="flex justify-center items-center gap-1 mt-3 md:col-span-2">
-                <span className="bg-black text-white rounded-l-md py-3 px-4 flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 4v16m8-8H4"
+                {/* Profile Photo Section */}
+                <div className="flex flex-col items-center mb-6">
+                    <div className="w-32 h-32 rounded-xl overflow-hidden bg-gray-200 shadow relative border-2 border-gray-300">
+                        <Image
+                            src={displayedImageUrl || "/profile-photo.png"} // Use displayedImageUrl
+                            alt="Profile Photo"
+                            width={128}
+                            height={128}
+                            className="object-cover w-full h-full"
+                        />
+                    </div>
+                    <input
+                        id="profileUpload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
                     />
-                  </svg>
-                </span>
-                <button
-                  type="submit"
-                  className="cursor-pointer bg-[#004432] text-white px-8 py-3 rounded-r-md font-semibold hover:bg-[#003522] transition"
-                >
-                  UPDATE
-                </button>
-              </div>
-            </form>
+                    <label
+                        htmlFor="profileUpload"
+                        className="mt-2 text-sm text-[#004432] underline cursor-pointer font-bold"
+                    >
+                        Change Photo
+                    </label>
+                </div>
 
-            {/* ✅ Feedback Message */}
-            {message && (
-              <p className="text-center text-sm text-green-700 mt-3">{message}</p>
-            )}
+                {/* Message display */}
+                {message && (
+                    <p className={`text-center mb-4 ${message.startsWith('✅') ? 'text-green-600' : 'text-red-600'}`}>
+                        {message}
+                    </p>
+                )}
+
+                {/* Profile Information Display (Read-only for now) */}
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Name</label>
+                        <p className="mt-1 p-2 border border-gray-300 rounded-md bg-gray-100">{formData.name}</p>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Email</label>
+                        <p className="mt-1 p-2 border border-gray-300 rounded-md bg-gray-100">{formData.email}</p>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">CNIC</label>
+                        <p className="mt-1 p-2 border border-gray-300 rounded-md bg-gray-100">{formData.cnic}</p>
+                    </div>
+                    {/* Add other display fields here if needed */}
+                </div>
+
+                {/* Update Button */}
+                <div className="mt-6 text-center">
+                    <button
+                        type="submit"
+                        disabled={updatingProfile}
+                        className={`px-6 py-2 rounded-md font-semibold transition ${
+                            updatingProfile
+                                ? 'bg-gray-400 cursor-not-allowed'
+                                : 'bg-[#004432] text-white hover:bg-[#003522]'
+                        }`}
+                    >
+                        {updatingProfile ? "Updating..." : "Update Profile Photo"}
+                    </button>
+                </div>
+            </form>
           </div>
 
           <UserFooter />
