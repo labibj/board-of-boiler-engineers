@@ -8,7 +8,8 @@ export interface UserData {
   name: string;
   email: string;
   cnic: string; // Assuming CNIC is stored as 'cnic' in your DB
-  profilePhoto?: string | null; // URL to Cloudinary photo
+  profilePhoto?: string | null; // URL to GCS profile photo
+  rollNoSlipUrl?: string | null; // NEW: URL to GCS roll number slip PDF
   password?: string; // Hashed password, optional for fetching
   // Add other fields from your user document as needed
 }
@@ -24,7 +25,6 @@ async function getUsersCollection(): Promise<Collection<UserData>> {
 // Function to find a user by ID
 export async function findUserById(userId: string): Promise<UserData | null> {
   const collection = await getUsersCollection();
-  // MongoDB ObjectId requires a valid string, so wrap in try-catch or validate
   try {
     const user = await collection.findOne({ _id: new ObjectId(userId) });
     return user;
@@ -34,7 +34,21 @@ export async function findUserById(userId: string): Promise<UserData | null> {
   }
 }
 
-// Function to update a user's profile (specifically for photo for now)
+// Function to find a user by CNIC or Email (for admin assigning slips)
+export async function findUserByIdentifier(identifier: string): Promise<UserData | null> {
+  const collection = await getUsersCollection();
+  try {
+    const user = await collection.findOne({
+      $or: [{ email: identifier }, { cnic: identifier }]
+    });
+    return user;
+  } catch (error) {
+    console.error("Error finding user by identifier:", error);
+    return null;
+  }
+}
+
+// Function to update a user's profile or roll no slip
 export async function updateUserProfile(userId: string, updateData: Partial<UserData>): Promise<boolean> {
   const collection = await getUsersCollection();
   try {

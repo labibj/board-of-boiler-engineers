@@ -124,7 +124,7 @@ export default function DashboardLayout() {
                     sm:w-48 sm:h-48 sm:p-5
                     md:w-56 md:h-56 md:p-6
                     lg:w-80 lg:h-80 lg:p-10">
-      <Link href="/admin/dashboard/">
+      <Link href="/admin/roll-no-slip/">
         <FaIdBadge className="text-black text-3xl sm:text-4xl md:text-5xl lg:text-6xl" />
       </Link>
       <h3 className="text-lg sm:text-xl md:text-xl lg:text-2xl font-semibold">ROLL NO SLIP</h3>

@@ -16,9 +16,9 @@ export const sidebarLinks = [
     href: "/user/applications",
   },
   {
-    label: "Date Sheet",
+    label: "Roll No Slip",
     icon: "/datesheet-icon.png",
-    href: "/user/dashboard",
+    href: "/user/roll-no-slip",
   },
   {
     label: "Result",
