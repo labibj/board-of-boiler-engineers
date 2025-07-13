@@ -1,8 +1,10 @@
 // lib/models/application.ts
-import clientPromise from "../mongodb";
+import clientPromise from "../mongodb"; // Assuming mongodb.ts is in the same lib folder
+import { Collection, ObjectId } from "mongodb";
 
-// Updated ApplicationData interface with mostly optional fields
+// Interface for an application document
 export interface ApplicationData {
+  _id?: ObjectId; // MongoDB ObjectId
   certificate?: string;
   fullName?: string;
   fatherName?: string;
@@ -10,21 +12,19 @@ export interface ApplicationData {
   mobile?: string;
   permanentAddress?: string;
   presentAddress?: string;
-  day?: string;
-  month?: string;
-  year?: string;
+  dob?: string; // CHANGED: Single field for Date of Birth (MM/DD/YYYY)
   idCardNumber?: string;
   departmentName?: string;
   qualification?: string;
   degreeDay?: string;
   degreeMonth?: string;
   degreeYear?: string;
-  frontIdCard?: string | null; // Changed to allow null
-  backIdCard?: string | null;  // Changed to allow null
-  profilePhoto?: string | null; // Changed to allow null
-  feeSlip?: string | null;      // Changed to allow null
+  frontIdCard?: string | null; // URL
+  backIdCard?: string | null; // URL
+  profilePhoto?: string | null; // URL
+  feeSlip?: string | null; // URL
   certificateDiploma?: string;
-  certificateDiplomaFile?: string | null; // Added and changed to allow null
+  certificateDiplomaFile?: string | null; // URL
   issueDay?: string;
   issueMonth?: string;
   issueYear?: string;
@@ -35,19 +35,29 @@ export interface ApplicationData {
   candidateDesignation?: string;
   actualTime?: string;
   dateStartService?: string;
-  serviceLetter?: string | null; // Changed to allow null
+  serviceLetter?: string | null; // URL
   submittedBy?: {
     userId: string;
     email: string;
   };
-  submittedAt: Date;
-  applicationId?: string;
+  submittedAt: Date; // Ensure this is always a Date
+  applicationId?: string; // Optional, if you have a separate app ID
 }
 
-// Create new application document
-export async function createApplication(applicationData: ApplicationData) {
+// Function to get the applications collection
+async function getApplicationsCollection(): Promise<Collection<ApplicationData>> {
   const client = await clientPromise;
-  const db = client.db();
-  const result = await db.collection("applications").insertOne(applicationData);
-  return result;
+  const db = client.db(process.env.MONGODB_DB_NAME || "boiler_board"); // Use DB name from env or default
+  return db.collection<ApplicationData>("applications");
+}
+
+// Function to create a new application
+export async function createApplication(applicationData: ApplicationData) {
+  const collection = await getApplicationsCollection();
+  // Ensure _id is not present for new inserts, MongoDB will add it.
+  // Also ensure submittedAt is always set here if not provided by the frontend.
+  const { _id, ...rest } = applicationData;
+  const dataToInsert = { ...rest, submittedAt: applicationData.submittedAt || new Date() };
+  const insertResult = await collection.insertOne(dataToInsert);
+  return insertResult;
 }

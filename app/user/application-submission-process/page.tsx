@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react"; // Import useEffect
-import { useRouter } from "next/navigation"; // Import useRouter
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import UserHeader from "@/app/components/UserHeader";
 import UserFooter from "@/app/components/UserFooter";
 
@@ -14,9 +14,7 @@ const initialFormData = {
   mobile: "",
   permanentAddress: "",
   presentAddress: "",
-  day: "",
-  month: "",
-  year: "",
+  dob: "", // CHANGED: Single field for Date of Birth (DD/MM/YYYY)
   idCardNumber: "",
   departmentName: "",
   qualification: "",
@@ -48,22 +46,20 @@ export default function ApplicationSubmissionProcess() {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<FormDataType>(initialFormData);
   const [submitting, setSubmitting] = useState(false);
-  const [loadingAuth, setLoadingAuth] = useState(true); // New state for authentication check
-  const router = useRouter(); // Initialize useRouter
+  const [loadingAuth, setLoadingAuth] = useState(true);
+  const router = useRouter();
 
   // Authentication check on component mount
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
-        // No token found, redirect to login
         router.replace("/user/login");
         return;
       }
 
       try {
-        // Verify token by calling a protected API
-        const res = await fetch("/api/user/profile", { // Using profile API as a token validation endpoint
+        const res = await fetch("/api/user/profile", {
           method: "GET",
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -71,22 +67,21 @@ export default function ApplicationSubmissionProcess() {
         });
 
         if (!res.ok) {
-          // Token invalid/expired, clear it and redirect
           localStorage.removeItem("token");
           router.replace("/user/login");
           return;
         }
       } catch (error) {
         console.error("Authentication check failed:", error);
-        localStorage.removeItem("token"); // Clear token on network error too
+        localStorage.removeItem("token");
         router.replace("/user/login");
         return;
       }
-      setLoadingAuth(false); // Authentication check passed, show content
+      setLoadingAuth(false);
     };
 
     checkAuth();
-  }, [router]); // Dependency array includes router
+  }, [router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { id, value } = e.target;
@@ -100,6 +95,23 @@ export default function ApplicationSubmissionProcess() {
     }
   };
 
+  // Helper for DOB validation (DD/MM/YYYY)
+  const isValidDate = (dateString: string) => {
+    // Regex for DD/MM/YYYY format
+    const regex = /^(0[1-9]|[1-2][0-9]|3[0-1])\/(0[1-9]|1[0-2])\/\d{4}$/;
+    if (!regex.test(dateString)) return false;
+
+    const parts = dateString.split('/');
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const year = parseInt(parts[2], 10);
+
+    // Create a Date object and check if the components match
+    // Month is 0-indexed in Date constructor, so subtract 1 from month
+    const date = new Date(year, month - 1, day);
+    return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+  };
+
   const handleNextStep = () => {
     if (step === 1) {
       const {
@@ -110,9 +122,7 @@ export default function ApplicationSubmissionProcess() {
         mobile,
         permanentAddress,
         presentAddress,
-        day,
-        month,
-        year,
+        dob, // Check dob
         idCardNumber,
         frontIdCard,
         backIdCard,
@@ -122,12 +132,19 @@ export default function ApplicationSubmissionProcess() {
 
       if (
         !certificate || !fullName || !fatherName || !email || !mobile ||
-        !permanentAddress || !presentAddress || !day || !month || !year ||
+        !permanentAddress || !presentAddress || !dob ||
         !idCardNumber || !frontIdCard || !backIdCard || !profilePhoto || !feeSlip
       ) {
         alert("Please fill out all required fields and upload files in Step 1.");
         return;
       }
+
+      // Validate DOB format
+      if (!isValidDate(dob)) {
+        alert("Please enter a valid Date of Birth in DD/MM/YYYY format.");
+        return;
+      }
+
     } else if (step === 2) {
       const {
         departmentName,
@@ -157,7 +174,7 @@ export default function ApplicationSubmissionProcess() {
       const token = localStorage.getItem("token");
       if (!token) {
         alert("You must be logged in to submit the form.");
-        setSubmitting(false); // Ensure submitting state is reset
+        setSubmitting(false);
         return;
       }
 
@@ -226,6 +243,14 @@ export default function ApplicationSubmissionProcess() {
           </h2>
 
           <section className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
+            {/* NEW: Notes at the beginning of the form */}
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
+              <p><strong>Note:</strong> Student must clear the exam within 5 years if they fail in any class. If who haven't completed all exams within 5 years will be required to retake the entire examination series. Just a validation message.</p>
+            </div>
+            <div className="mb-6 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
+              <p><strong>Note:</strong> Date format must be shown in that format DD/MM/YYYY</p>
+            </div>
+
             <form className="space-y-6">
 
               {/* Certificate Selector */}
@@ -233,8 +258,9 @@ export default function ApplicationSubmissionProcess() {
                 <label htmlFor="certificate" className="block mb-1 font-semibold text-gray-700">Certificate Now Required</label>
                 <select value={formData.certificate} onChange={handleChange} id="certificate" className="w-full border border-black rounded-md px-3 py-2">
                   <option value="">Select Option</option>
-                  <option value="option1">2nd class</option>
-                  <option value="option2">3rd class</option>
+                  <option value="1st_class">1st class</option>
+                  <option value="2nd_class">2nd class</option> {/* Changed value to 2nd_class for consistency */}
+                  <option value="3rd_class">3rd class</option> {/* Changed value to 3rd_class for consistency */}
                 </select>
               </div>
 
@@ -273,14 +299,20 @@ export default function ApplicationSubmissionProcess() {
                 <input value={formData.presentAddress} onChange={handleChange} id="presentAddress" type="text" className="w-full border border-black rounded-md px-3 py-2" />
               </div>
 
-              {/* Date of Birth */}
+              {/* Date of Birth (CHANGED TO SINGLE INPUT DD/MM/YYYY) */}
               <div>
-                <label className="block mb-1 font-semibold text-gray-700">Date of Birth</label>
-                <div className="flex flex-col md:flex-row gap-2">
-                  <input value={formData.day} onChange={handleChange} id="day" type="number" placeholder="Day" min="1" max="31" className="w-full md:w-1/3 border border-black rounded-md px-3 py-2" />
-                  <input value={formData.month} onChange={handleChange} id="month" type="number" placeholder="Month" min="1" max="12" className="w-full md:w-1/3 border border-black rounded-md px-3 py-2" />
-                  <input value={formData.year} onChange={handleChange} id="year" type="number" placeholder="Year" min="1900" max="2099" className="w-full md:w-1/3 border border-black rounded-md px-3 py-2" />
-                </div>
+                <label htmlFor="dob" className="block mb-1 font-semibold text-gray-700">Date of Birth (DD/MM/YYYY)</label>
+                <input
+                  value={formData.dob}
+                  onChange={handleChange}
+                  id="dob"
+                  type="text"
+                  placeholder="DD/MM/YYYY" // CHANGED: Placeholder
+                  className="w-full border border-black rounded-md px-3 py-2"
+                  pattern="(0[1-9]|[1-2][0-9]|3[0-1])\/(0[1-9]|1[0-2])\/\d{4}" // CHANGED: Pattern for DD/MM/YYYY
+                  title="Please enter date in DD/MM/YYYY format"
+                  required
+                />
               </div>
 
               {/* CNIC */}
