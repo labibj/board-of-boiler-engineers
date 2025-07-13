@@ -16,15 +16,12 @@ let gcsCredentials;
 try {
   if (process.env.GCP_SERVICE_ACCOUNT_KEY) {
     gcsCredentials = JSON.parse(process.env.GCP_SERVICE_ACCOUNT_KEY);
-    // DEBUG LOG: Print parsed credentials to verify structure
     console.log("Parsed GCS Credentials (first few chars):", JSON.stringify(gcsCredentials).substring(0, 100));
   } else {
     console.error("GCP_SERVICE_ACCOUNT_KEY is not set.");
   }
 } catch (parseError) {
   console.error("Error parsing GCP_SERVICE_ACCOUNT_KEY:", parseError);
-  // This error indicates the JSON string itself is malformed.
-  // The 'invalid_grant' error happens later if the parsed object is invalid.
 }
 
 const storage = new Storage({
@@ -46,7 +43,6 @@ const uploadFileToCloudStorage = async (file: FormDataEntryValue | null): Promis
     return null;
   }
 
-  // FIX HERE: Changed 'arrayArrayBuffer()' to 'arrayBuffer()'
   const buffer = Buffer.from(await file.arrayBuffer());
   const fileName = file.name;
   const fileType = file.type;
@@ -59,7 +55,7 @@ const uploadFileToCloudStorage = async (file: FormDataEntryValue | null): Promis
 
     await fileRef.save(buffer, {
       contentType: fileType,
-      public: true,
+      // REMOVED: public: true, // This causes the error with Uniform bucket-level access
       resumable: false,
     });
 
