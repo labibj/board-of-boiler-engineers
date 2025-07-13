@@ -54,9 +54,8 @@ async function getApplicationsCollection(): Promise<Collection<ApplicationData>>
 // Function to create a new application
 export async function createApplication(applicationData: ApplicationData) {
   const collection = await getApplicationsCollection();
-  // Ensure _id is not present for new inserts, MongoDB will add it.
-  // Also ensure submittedAt is always set here if not provided by the frontend.
-  const { _id, ...rest } = applicationData;
+  // Fix: Rename _id to _unusedId to satisfy ESLint's no-unused-vars rule
+  const { _id: _unusedId, ...rest } = applicationData; 
   const dataToInsert = { ...rest, submittedAt: applicationData.submittedAt || new Date() };
   const insertResult = await collection.insertOne(dataToInsert);
   return insertResult;

@@ -139,7 +139,6 @@ export default function ApplicationSubmissionProcess() {
         return;
       }
 
-      // Validate DOB format
       if (!isValidDate(dob)) {
         alert("Please enter a valid Date of Birth in DD/MM/YYYY format.");
         return;
@@ -245,7 +244,7 @@ export default function ApplicationSubmissionProcess() {
           <section className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
             {/* NEW: Notes at the beginning of the form */}
             <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
-              <p><strong>Note:</strong> Student must clear the exam within 5 years if they fail in any class. If who haven't completed all exams within 5 years will be required to retake the entire examination series. Just a validation message.</p>
+              <p><strong>Note:</strong> Student must clear the exam within 5 years if they fail in any class. If who haven&#39;t completed all exams within 5 years will be required to retake the entire examination series. Just a validation message.</p>
             </div>
             <div className="mb-6 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
               <p><strong>Note:</strong> Date format must be shown in that format DD/MM/YYYY</p>
@@ -259,8 +258,8 @@ export default function ApplicationSubmissionProcess() {
                 <select value={formData.certificate} onChange={handleChange} id="certificate" className="w-full border border-black rounded-md px-3 py-2">
                   <option value="">Select Option</option>
                   <option value="1st_class">1st class</option>
-                  <option value="2nd_class">2nd class</option> {/* Changed value to 2nd_class for consistency */}
-                  <option value="3rd_class">3rd class</option> {/* Changed value to 3rd_class for consistency */}
+                  <option value="2nd_class">2nd class</option>
+                  <option value="3rd_class">3rd class</option>
                 </select>
               </div>
 
@@ -307,9 +306,9 @@ export default function ApplicationSubmissionProcess() {
                   onChange={handleChange}
                   id="dob"
                   type="text"
-                  placeholder="DD/MM/YYYY" // CHANGED: Placeholder
+                  placeholder="DD/MM/YYYY"
                   className="w-full border border-black rounded-md px-3 py-2"
-                  pattern="(0[1-9]|[1-2][0-9]|3[0-1])\/(0[1-9]|1[0-2])\/\d{4}" // CHANGED: Pattern for DD/MM/YYYY
+                  pattern="(0[1-9]|[1-2][0-9]|3[0-1])\/(0[1-9]|1[0-2])\/\d{4}"
                   title="Please enter date in DD/MM/YYYY format"
                   required
                 />
@@ -319,7 +318,7 @@ export default function ApplicationSubmissionProcess() {
               <div>
                 <label htmlFor="idCardNumber" className="block mb-1 font-semibold text-gray-700">Identity Card Number</label>
                 <input value={formData.idCardNumber} onChange={handleChange} id="idCardNumber" type="text" placeholder="35201-0000000-9" className="w-full border border-black rounded-md px-3 py-2" />
-              </div>
+                </div>
 
               {/* File Uploads */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
