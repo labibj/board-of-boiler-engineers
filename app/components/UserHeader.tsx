@@ -46,7 +46,7 @@ export default function UserHeader() {
             {/* Registration/Login button - now visible on all screens */}
             <div className="flex justify-center lg:justify-end">
               <a
-                href="/login"
+                href="/user/login"
                 className="inline-block bg-[#004432] text-white px-4 py-2 sm:py-3 rounded-tl-lg rounded-br-lg hover:bg-[#03614d] font-medium whitespace-nowrap transition text-xs sm:text-sm md:text-base"
               >
                 Registration / Login
