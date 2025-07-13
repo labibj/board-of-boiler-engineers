@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import cloudinary from "@/lib/cloudinary";
-import { findUserById, updateUserProfile, UserData } from "@/lib/models/user"; // Import new user model functions
+import { findUserById, updateUserProfile, UserData } from "@/lib/models/user";
 import jwt from "jsonwebtoken";
+import { Storage } from '@google-cloud/storage'; // Import Google Cloud Storage SDK
 
 // Define JWT payload type (assuming user tokens contain _id and email)
 interface JwtPayload {
@@ -11,27 +11,54 @@ interface JwtPayload {
   exp?: number;
 }
 
-// Helper function to upload file to Cloudinary (reused from previous implementations)
-const uploadFile = async (file: FormDataEntryValue | null): Promise<string | null> => {
+// Initialize Google Cloud Storage
+// For Vercel, we'll use GCP_SERVICE_ACCOUNT_KEY env variable containing the JSON content.
+const storage = new Storage({
+  projectId: process.env.GCP_PROJECT_ID,
+  credentials: process.env.GCP_SERVICE_ACCOUNT_KEY
+    ? JSON.parse(process.env.GCP_SERVICE_ACCOUNT_KEY)
+    : undefined, // If the env var is not set, credentials will be undefined
+});
+
+const GCS_BUCKET_NAME = process.env.GCP_BUCKET_NAME; // Your GCS bucket name
+
+// Helper function to upload file to Google Cloud Storage
+const uploadFileToCloudStorage = async (file: FormDataEntryValue | null): Promise<string | null> => {
   if (!file || !(file instanceof File)) {
     console.warn(`Skipping upload for non-file or null value: ${file}`);
     return null;
   }
 
+  if (!GCS_BUCKET_NAME) {
+    console.error("GCS_BUCKET_NAME is not defined in environment variables.");
+    return null;
+  }
+
   const buffer = Buffer.from(await file.arrayBuffer());
-  const base64 = buffer.toString("base64");
-  const mime = file.type;
-  const dataUri = `data:${mime};base64,${base64}`;
+  const fileName = file.name;
+  const fileType = file.type;
+
+  // Generate a unique file name to avoid collisions
+  const uniqueFileName = `profile-photos/${Date.now()}-${fileName.replace(/\s/g, '_')}`; // Replace spaces for URL safety
 
   try {
-    const uploaded = await cloudinary.uploader.upload(dataUri, {
-      folder: "user-profile-photos", // Dedicated folder for user profile photos
-      resource_type: "image", // Ensure it's treated as an image
-      public_id: `${Date.now()}-${file.name.split('.')[0]}` // Unique public ID
+    const bucket = storage.bucket(GCS_BUCKET_NAME);
+    const fileRef = bucket.file(uniqueFileName);
+
+    // Upload the buffer to GCS
+    await fileRef.save(buffer, {
+      contentType: fileType,
+      public: true, // Make the uploaded file publicly accessible
+      resumable: false, // For smaller files, resumable upload is not necessary
     });
-    return uploaded.secure_url;
-  } catch (cloudinaryError) {
-    console.error(`Cloudinary upload failed for file type ${mime}:`, cloudinaryError);
+
+    // Construct the public URL for the file
+    const publicUrl = `https://storage.googleapis.com/${GCS_BUCKET_NAME}/${uniqueFileName}`;
+    console.log(`File uploaded to GCS: ${publicUrl}`);
+    return publicUrl;
+
+  } catch (gcsError) {
+    console.error("Google Cloud Storage upload failed:", gcsError);
     return null;
   }
 };
@@ -105,10 +132,11 @@ export async function PUT(req: NextRequest) {
     let newProfilePhotoUrl: string | null = null;
 
     if (profilePhotoFile) {
-      newProfilePhotoUrl = await uploadFile(profilePhotoFile);
+      // Use the new cloud storage upload function
+      newProfilePhotoUrl = await uploadFileToCloudStorage(profilePhotoFile);
       if (newProfilePhotoUrl === null) {
         // Handle case where upload failed but file was present
-        return NextResponse.json({ error: "Failed to upload new profile photo." }, { status: 500 });
+        return NextResponse.json({ error: "Failed to upload new profile photo to cloud storage." }, { status: 500 });
       }
     }
 
