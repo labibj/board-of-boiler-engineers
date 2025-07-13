@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react"; // Import useEffect
 import { useRouter } from "next/navigation";
 import UserHeader from "@/app/components/UserHeader";
 import UserFooter from "@/app/components/UserFooter";
@@ -11,7 +11,44 @@ export default function LoginPage() {
     password: "",
   });
   const [message, setMessage] = useState("");
-  const router = useRouter(); // ✅ For redirect
+  const [loading, setLoading] = useState(true); // New loading state for initial check
+  const router = useRouter();
+
+  // Effect to check authentication status on component mount
+  useEffect(() => {
+    const checkAuthAndRedirect = async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          // Attempt to verify the token by calling a protected API route
+          // Using /api/user/profile as a lightweight check for token validity
+          const res = await fetch("/api/user/profile", {
+            method: "GET",
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          });
+
+          if (res.ok) {
+            // Token is valid, redirect to dashboard
+            router.replace("/user/dashboard"); // Use replace to prevent going back to login page
+          } else {
+            // Token is invalid or expired, clear it and stay on login page
+            localStorage.removeItem("token");
+            setLoading(false); // Authentication check complete, show login form
+          }
+        } catch (error) {
+          console.error("Authentication check failed:", error);
+          localStorage.removeItem("token"); // Clear token on network error too
+          setLoading(false); // Authentication check complete, show login form
+        }
+      } else {
+        setLoading(false); // No token, show login form
+      }
+    };
+
+    checkAuthAndRedirect();
+  }, [router]); // Dependency array includes router
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -34,11 +71,8 @@ export default function LoginPage() {
         localStorage.setItem("token", data.token);
         setMessage("✅ Login successful!");
 
-        // ✅ Redirect to dashboard after short delay
-        setTimeout(() => {
-          router.push("/user/dashboard");
-        }, 1000); 
-
+        // Redirect to dashboard immediately after successful login
+        router.replace("/user/dashboard"); // Use replace here as well
       } else {
         setMessage(`❌ ${data.message}`);
       }
@@ -47,6 +81,15 @@ export default function LoginPage() {
       setMessage("❌ Something went wrong. Please try again.");
     }
   };
+
+  // Show a loading indicator while checking auth status
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <p className="text-lg text-[#004432]">Checking authentication...</p>
+      </div>
+    );
+  }
 
   return (
     <>
