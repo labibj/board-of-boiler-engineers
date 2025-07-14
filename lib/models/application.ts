@@ -12,7 +12,7 @@ export interface ApplicationData {
   mobile?: string;
   permanentAddress?: string;
   presentAddress?: string;
-  dob?: string; // Single field for Date of Birth (MM/DD/YYYY)
+  dob?: string; // CHANGED: Single field for Date of Birth (MM/DD/YYYY)
   idCardNumber?: string;
   departmentName?: string;
   qualification?: string;
@@ -54,14 +54,9 @@ async function getApplicationsCollection(): Promise<Collection<ApplicationData>>
 // Function to create a new application
 export async function createApplication(applicationData: ApplicationData) {
   const collection = await getApplicationsCollection();
-
-  // Exclude _id from the data before inserting
-  const { _id: _, ...rest } = applicationData;
-  const dataToInsert = {
-    ...rest,
-    submittedAt: applicationData.submittedAt || new Date(),
-  };
-
+  // Destructure without _id since it's not used, or use underscore to indicate intentional non-use
+  const { _id: _, ...rest } = applicationData; // Use underscore to suppress unused variable warning
+  const dataToInsert = { ...rest, submittedAt: applicationData.submittedAt || new Date() };
   const insertResult = await collection.insertOne(dataToInsert);
   return insertResult;
 }
