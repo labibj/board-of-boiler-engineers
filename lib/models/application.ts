@@ -12,7 +12,7 @@ export interface ApplicationData {
   mobile?: string;
   permanentAddress?: string;
   presentAddress?: string;
-  dob?: string; // CHANGED: Single field for Date of Birth (MM/DD/YYYY)
+  dob?: string; // Single field for Date of Birth (MM/DD/YYYY)
   idCardNumber?: string;
   departmentName?: string;
   qualification?: string;
@@ -54,10 +54,14 @@ async function getApplicationsCollection(): Promise<Collection<ApplicationData>>
 // Function to create a new application
 export async function createApplication(applicationData: ApplicationData) {
   const collection = await getApplicationsCollection();
-  // Fix: Disable ESLint's no-unused-vars rule for this line
-  // eslint-disable-next-line no-unused-vars
-  const { _id, ...rest } = applicationData; 
-  const dataToInsert = { ...rest, submittedAt: applicationData.submittedAt || new Date() };
+
+  // Exclude _id from the data before inserting
+  const { _id: _, ...rest } = applicationData;
+  const dataToInsert = {
+    ...rest,
+    submittedAt: applicationData.submittedAt || new Date(),
+  };
+
   const insertResult = await collection.insertOne(dataToInsert);
   return insertResult;
 }
