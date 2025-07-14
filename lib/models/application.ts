@@ -54,8 +54,9 @@ async function getApplicationsCollection(): Promise<Collection<ApplicationData>>
 // Function to create a new application
 export async function createApplication(applicationData: ApplicationData) {
   const collection = await getApplicationsCollection();
-  // Fix: Rename _id to _unusedId to satisfy ESLint's no-unused-vars rule
-  const { _id: _unusedId, ...rest } = applicationData; 
+  // Fix: Disable ESLint's no-unused-vars rule for this line
+  // eslint-disable-next-line no-unused-vars
+  const { _id, ...rest } = applicationData; 
   const dataToInsert = { ...rest, submittedAt: applicationData.submittedAt || new Date() };
   const insertResult = await collection.insertOne(dataToInsert);
   return insertResult;
