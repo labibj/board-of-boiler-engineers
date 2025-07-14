@@ -14,7 +14,7 @@ const initialFormData = {
   mobile: "",
   permanentAddress: "",
   presentAddress: "",
-  dob: "", // CHANGED: Single field for Date of Birth (DD/MM/YYYY)
+  dob: "", // Single field for Date of Birth (MM/DD/YYYY)
   idCardNumber: "",
   departmentName: "",
   qualification: "",
@@ -95,15 +95,15 @@ export default function ApplicationSubmissionProcess() {
     }
   };
 
-  // Helper for DOB validation (DD/MM/YYYY)
+  // Helper for DOB validation (MM/DD/YYYY) - UPDATED
   const isValidDate = (dateString: string) => {
-    // Regex for DD/MM/YYYY format
-    const regex = /^(0[1-9]|[1-2][0-9]|3[0-1])\/(0[1-9]|1[0-2])\/\d{4}$/;
+    // Regex for MM/DD/YYYY format
+    const regex = /^(0[1-9]|1[0-2])\/(0[1-9]|[1-2][0-9]|3[0-1])\/\d{4}$/;
     if (!regex.test(dateString)) return false;
 
     const parts = dateString.split('/');
-    const day = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10);
+    const month = parseInt(parts[0], 10); // Month is first part for MM/DD/YYYY
+    const day = parseInt(parts[1], 10);
     const year = parseInt(parts[2], 10);
 
     // Create a Date object and check if the components match
@@ -140,7 +140,7 @@ export default function ApplicationSubmissionProcess() {
       }
 
       if (!isValidDate(dob)) {
-        alert("Please enter a valid Date of Birth in DD/MM/YYYY format.");
+        alert("Please enter a valid Date of Birth in MM/DD/YYYY format.");
         return;
       }
 
@@ -242,12 +242,12 @@ export default function ApplicationSubmissionProcess() {
           </h2>
 
           <section className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
-            {/* NEW: Notes at the beginning of the form */}
+            {/* Notes at the beginning of the form */}
             <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
               <p><strong>Note:</strong> Student must clear the exam within 5 years if they fail in any class. If who haven&#39;t completed all exams within 5 years will be required to retake the entire examination series. Just a validation message.</p>
             </div>
             <div className="mb-6 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
-              <p><strong>Note:</strong> Date format must be shown in that format DD/MM/YYYY</p>
+              <p><strong>Note:</strong> Date format must be shown in that format MM/DD/YYYY</p> {/* UPDATED NOTE */}
             </div>
 
             <form className="space-y-6">
@@ -298,18 +298,18 @@ export default function ApplicationSubmissionProcess() {
                 <input value={formData.presentAddress} onChange={handleChange} id="presentAddress" type="text" className="w-full border border-black rounded-md px-3 py-2" />
               </div>
 
-              {/* Date of Birth (CHANGED TO SINGLE INPUT DD/MM/YYYY) */}
+              {/* Date of Birth (CHANGED TO SINGLE INPUT MM/DD/YYYY) */}
               <div>
-                <label htmlFor="dob" className="block mb-1 font-semibold text-gray-700">Date of Birth (DD/MM/YYYY)</label>
+                <label htmlFor="dob" className="block mb-1 font-semibold text-gray-700">Date of Birth (MM/DD/YYYY)</label> {/* UPDATED LABEL */}
                 <input
                   value={formData.dob}
                   onChange={handleChange}
                   id="dob"
                   type="text"
-                  placeholder="DD/MM/YYYY"
+                  placeholder="MM/DD/YYYY" // UPDATED PLACEHOLDER
                   className="w-full border border-black rounded-md px-3 py-2"
-                  pattern="(0[1-9]|[1-2][0-9]|3[0-1])\/(0[1-9]|1[0-2])\/\d{4}"
-                  title="Please enter date in DD/MM/YYYY format"
+                  pattern="(0[1-9]|1[0-2])\/(0[1-9]|[1-2][0-9]|3[0-1])\/\d{4}" // UPDATED PATTERN
+                  title="Please enter date in MM/DD/YYYY format"
                   required
                 />
               </div>
