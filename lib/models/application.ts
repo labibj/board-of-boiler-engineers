@@ -54,9 +54,10 @@ async function getApplicationsCollection(): Promise<Collection<ApplicationData>>
 // Function to create a new application
 export async function createApplication(applicationData: ApplicationData) {
   const collection = await getApplicationsCollection();
-  // Destructure without _id since it's not used, or use underscore to indicate intentional non-use
-  const { _id: _, ...rest } = applicationData; // Use underscore to suppress unused variable warning
-  const dataToInsert = { ...rest, submittedAt: applicationData.submittedAt || new Date() };
+  // Avoid destructuring _id since it's not used
+  const dataToInsert = { ...applicationData, submittedAt: applicationData.submittedAt || new Date() };
+  // Optionally, explicitly remove _id to ensure MongoDB generates a new one
+  delete dataToInsert._id;
   const insertResult = await collection.insertOne(dataToInsert);
   return insertResult;
 }
