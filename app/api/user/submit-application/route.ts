@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
-import { createApplication } from "@/lib/models/application";
+import { createApplication, ApplicationStatus } from "@/lib/models/application"; // Import ApplicationStatus
 import jwt from "jsonwebtoken";
 
 // Define JWT payload type
@@ -14,7 +14,6 @@ interface JwtPayload {
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
-    // CHANGE HERE: Read token from Authorization header instead of cookies
     const token = req.headers.get('authorization')?.replace('Bearer ', '');
 
     if (!token) {
@@ -24,7 +23,6 @@ export async function POST(req: NextRequest) {
 
     let decoded: JwtPayload;
     try {
-      // Verify JWT token and extract user information
       decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
     } catch (jwtError) {
       console.error("Authorization Error: Invalid or expired token.", jwtError);
@@ -84,6 +82,7 @@ export async function POST(req: NextRequest) {
       serviceLetter: serviceLetterUrl,
       submittedBy: { userId, email: userEmail },
       submittedAt: new Date(),
+      status: "Pending" as ApplicationStatus, // NEW: Set initial status
     };
 
     const result = await createApplication(applicationData);
