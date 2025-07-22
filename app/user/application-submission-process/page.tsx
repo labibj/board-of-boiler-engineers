@@ -275,7 +275,7 @@ export default function ApplicationSubmissionProcess() {
               </span>.
             </p>
             <p className="text-gray-700 mb-6">
-              You can view your application details on the "My Applications" page.
+              You can view your application details on the &quot;My Applications&quot; page.
             </p>
             <button
               onClick={() => router.push("/user/applications")}
