@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { getApplications, updateApplicationStatus, ApplicationStatus } from "@/lib/models/application";
-import { ObjectId } from "mongodb"; // Import ObjectId for converting string IDs
+// Removed: import { ObjectId } from "mongodb"; // ObjectId is used in lib/models/application, not directly here
 
 // Define JWT payload type for admin
 interface JwtPayload {
@@ -42,16 +42,16 @@ export async function GET(req: NextRequest) {
     // Optional: Filter by status if query parameter is present
     const { searchParams } = new URL(req.url);
     const statusFilter = searchParams.get('status');
-    const filter: any = {};
+    
+    // Changed: Specify a more precise type for 'filter'
+    const filter: { status?: ApplicationStatus } = {}; 
     if (statusFilter && ["Pending", "Accepted", "Cancelled", "Held"].includes(statusFilter)) {
-      filter.status = statusFilter;
+      filter.status = statusFilter as ApplicationStatus; // Cast to ApplicationStatus
     }
 
     const applications = await getApplications(filter);
 
     // No need to destructure 'password' from 'app' because ApplicationData does not contain it.
-    // The 'applications' array already contains only the fields defined in ApplicationData.
-    // If you had a 'User' model and were fetching user data, you would filter password there.
     const safeApplications = applications; 
 
     return NextResponse.json({ success: true, applications: safeApplications });
