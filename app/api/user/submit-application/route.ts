@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
-import { createApplication, ApplicationStatus } from "@/lib/models/application"; // Import ApplicationStatus
+import { createApplication, ApplicationStatus, findApplicationByUserId } from "@/lib/models/application"; // Import findApplicationByUserId
 import jwt from "jsonwebtoken";
 
 // Define JWT payload type
@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
 
     let decoded: JwtPayload;
     try {
+      // Verify JWT token and extract user information
       decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
     } catch (jwtError) {
       console.error("Authorization Error: Invalid or expired token.", jwtError);
@@ -31,6 +32,12 @@ export async function POST(req: NextRequest) {
 
     const userId = decoded._id;
     const userEmail = decoded.email;
+
+    // NEW: Check if user has already submitted an application
+    const existingApplication = await findApplicationByUserId(userId);
+    if (existingApplication) {
+      return NextResponse.json({ error: "You have already submitted an application." }, { status: 409 }); // 409 Conflict
+    }
 
     // Extract all form fields (text + files)
     const fields: Record<string, string> = {};
@@ -82,7 +89,7 @@ export async function POST(req: NextRequest) {
       serviceLetter: serviceLetterUrl,
       submittedBy: { userId, email: userEmail },
       submittedAt: new Date(),
-      status: "Pending" as ApplicationStatus, // NEW: Set initial status
+      status: "Pending" as ApplicationStatus, // Set initial status
     };
 
     const result = await createApplication(applicationData);

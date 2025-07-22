@@ -47,11 +47,13 @@ export default function ApplicationSubmissionProcess() {
   const [formData, setFormData] = useState<FormDataType>(initialFormData);
   const [submitting, setSubmitting] = useState(false);
   const [loadingAuth, setLoadingAuth] = useState(true);
+  const [hasExistingApplication, setHasExistingApplication] = useState(false); // NEW state
+  const [existingApplicationStatus, setExistingApplicationStatus] = useState<string | null>(null); // NEW state for status
   const router = useRouter();
 
-  // Authentication check on component mount
+  // Authentication check and existing application check on component mount
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuthAndApplication = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
         router.replace("/user/login");
@@ -59,20 +61,39 @@ export default function ApplicationSubmissionProcess() {
       }
 
       try {
-        const res = await fetch("/api/user/profile", {
+        // First, verify authentication
+        const authRes = await fetch("/api/user/profile", {
           method: "GET",
           headers: {
             'Authorization': `Bearer ${token}`,
           },
         });
 
-        if (!res.ok) {
+        if (!authRes.ok) {
           localStorage.removeItem("token");
           router.replace("/user/login");
           return;
         }
+
+        // Then, check for existing application
+        const appRes = await fetch("/api/user/applications", {
+          method: "GET",
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        const appData = await appRes.json();
+
+        if (appRes.ok && appData.application) {
+          setHasExistingApplication(true);
+          setExistingApplicationStatus(appData.application.status);
+        } else {
+          setHasExistingApplication(false);
+          setExistingApplicationStatus(null);
+        }
+
       } catch (error) {
-        console.error("Authentication check failed:", error);
+        console.error("Authentication or application check failed:", error);
         localStorage.removeItem("token");
         router.replace("/user/login");
         return;
@@ -80,7 +101,7 @@ export default function ApplicationSubmissionProcess() {
       setLoadingAuth(false);
     };
 
-    checkAuth();
+    checkAuthAndApplication();
   }, [router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -95,19 +116,16 @@ export default function ApplicationSubmissionProcess() {
     }
   };
 
-  // Helper for DOB validation (MM/DD/YYYY) - UPDATED
+  // Helper for DOB validation (MM/DD/YYYY)
   const isValidDate = (dateString: string) => {
-    // Regex for MM/DD/YYYY format
     const regex = /^(0[1-9]|1[0-2])\/(0[1-9]|[1-2][0-9]|3[0-1])\/\d{4}$/;
     if (!regex.test(dateString)) return false;
 
     const parts = dateString.split('/');
-    const month = parseInt(parts[0], 10); // Month is first part for MM/DD/YYYY
+    const month = parseInt(parts[0], 10);
     const day = parseInt(parts[1], 10);
     const year = parseInt(parts[2], 10);
 
-    // Create a Date object and check if the components match
-    // Month is 0-indexed in Date constructor, so subtract 1 from month
     const date = new Date(year, month - 1, day);
     return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
   };
@@ -122,7 +140,7 @@ export default function ApplicationSubmissionProcess() {
         mobile,
         permanentAddress,
         presentAddress,
-        dob, // Check dob
+        dob,
         idCardNumber,
         frontIdCard,
         backIdCard,
@@ -210,9 +228,15 @@ export default function ApplicationSubmissionProcess() {
         alert("Application submitted successfully!");
         setFormData(initialFormData);
         setStep(1);
+        router.push("/user/applications"); // NEW: Redirect to applications page
       } else {
         console.error("Submission failed:", data);
         alert(`Failed to submit application: ${data.error || 'Unknown error'}`);
+        // If the error is due to existing application, update state
+        if (res.status === 409) { // 409 Conflict status for existing application
+          setHasExistingApplication(true);
+          setExistingApplicationStatus("Submitted"); // Or fetch actual status if needed
+        }
       }
     } catch (error) {
       console.error("An error occurred during submission:", error);
@@ -228,6 +252,41 @@ export default function ApplicationSubmissionProcess() {
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <p className="text-lg text-[#004432]">Checking authentication...</p>
       </div>
+    );
+  }
+
+  // NEW: Conditionally render form or message
+  if (hasExistingApplication) {
+    return (
+      <>
+        <UserHeader />
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
+          <div className="bg-white p-8 rounded-lg shadow-md text-center">
+            <h2 className="text-2xl font-bold text-[#004432] mb-4">Application Already Submitted</h2>
+            <p className="text-gray-700 mb-4">
+              You have already submitted an application. Its current status is:{" "}
+              <span className={`font-semibold ${
+                existingApplicationStatus === 'Accepted' ? 'text-green-600' :
+                existingApplicationStatus === 'Pending' ? 'text-yellow-600' :
+                existingApplicationStatus === 'Held' ? 'text-orange-600' :
+                'text-red-600'
+              }`}>
+                {existingApplicationStatus || "Unknown"}
+              </span>.
+            </p>
+            <p className="text-gray-700 mb-6">
+              You can view your application details on the "My Applications" page.
+            </p>
+            <button
+              onClick={() => router.push("/user/applications")}
+              className="bg-[#004432] text-white px-6 py-3 rounded-md font-semibold hover:bg-[#003522] transition"
+            >
+              Go to My Applications
+            </button>
+          </div>
+        </div>
+        <UserFooter />
+      </>
     );
   }
 
@@ -247,7 +306,7 @@ export default function ApplicationSubmissionProcess() {
               <p><strong>Note:</strong> Student must clear the exam within 5 years if they fail in any class. If who haven&#39;t completed all exams within 5 years will be required to retake the entire examination series. Just a validation message.</p>
             </div>
             <div className="mb-6 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
-              <p><strong>Note:</strong> Date format must be shown in that format MM/DD/YYYY</p> {/* UPDATED NOTE */}
+              <p><strong>Note:</strong> Date format must be shown in that format MM/DD/YYYY</p>
             </div>
 
             <form className="space-y-6">
@@ -300,15 +359,15 @@ export default function ApplicationSubmissionProcess() {
 
               {/* Date of Birth (CHANGED TO SINGLE INPUT MM/DD/YYYY) */}
               <div>
-                <label htmlFor="dob" className="block mb-1 font-semibold text-gray-700">Date of Birth (MM/DD/YYYY)</label> {/* UPDATED LABEL */}
+                <label htmlFor="dob" className="block mb-1 font-semibold text-gray-700">Date of Birth (MM/DD/YYYY)</label>
                 <input
                   value={formData.dob}
                   onChange={handleChange}
                   id="dob"
                   type="text"
-                  placeholder="MM/DD/YYYY" // UPDATED PLACEHOLDER
+                  placeholder="MM/DD/YYYY"
                   className="w-full border border-black rounded-md px-3 py-2"
-                  pattern="(0[1-9]|1[0-2])\/(0[1-9]|[1-2][0-9]|3[0-1])\/\d{4}" // UPDATED PATTERN
+                  pattern="(0[1-9]|1[0-2])\/(0[1-9]|[1-2][0-9]|3[0-1])\/\d{4}"
                   title="Please enter date in MM/DD/YYYY format"
                   required
                 />
