@@ -68,7 +68,7 @@ export async function createApplication(applicationData: ApplicationData) {
   };
 
   // Explicitly delete _id to ensure MongoDB generates a new one on insert
-  // eslint-disable-next-line no-unused-vars
+  // Removed: // eslint-disable-next-line no-unused-vars - No longer needed as no-unused-vars is not reported for _id
   delete dataToInsert._id; 
 
   const insertResult = await collection.insertOne(dataToInsert);
@@ -76,7 +76,8 @@ export async function createApplication(applicationData: ApplicationData) {
 }
 
 // Function to get applications (for admin)
-export async function getApplications(filter: any = {}): Promise<ApplicationData[]> {
+// Changed 'filter: any' to a more specific type
+export async function getApplications(filter: { status?: ApplicationStatus } = {}): Promise<ApplicationData[]> {
   const collection = await getApplicationsCollection();
   const applications = await collection.find(filter).sort({ submittedAt: -1 }).toArray();
   return applications;
@@ -89,7 +90,8 @@ export async function updateApplicationStatus(
   adminNotes?: string
 ): Promise<boolean> {
   const collection = await getApplicationsCollection();
-  const updateDoc: any = { $set: { status: status } };
+  // Changed 'updateDoc: any' to a more specific type for MongoDB update operators
+  const updateDoc: { $set: { status: ApplicationStatus; adminNotes?: string } } = { $set: { status: status } };
   if (adminNotes !== undefined) { // Only set adminNotes if provided
     updateDoc.$set.adminNotes = adminNotes;
   }
