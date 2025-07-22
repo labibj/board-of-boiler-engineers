@@ -49,6 +49,7 @@ export default function ApplicationSubmissionProcess() {
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [hasExistingApplication, setHasExistingApplication] = useState(false); // State to check if application exists
   const [existingApplicationStatus, setExistingApplicationStatus] = useState<string | null>(null); // State for existing application status
+  const [showForm, setShowForm] = useState(false); // NEW: State to control when the form steps are visible
   const router = useRouter();
 
   // Authentication check and existing application check on component mount
@@ -87,9 +88,11 @@ export default function ApplicationSubmissionProcess() {
         if (appRes.ok && appData.application) {
           setHasExistingApplication(true);
           setExistingApplicationStatus(appData.application.status);
+          setShowForm(false); // If app exists, do not show the form directly
         } else {
           setHasExistingApplication(false);
           setExistingApplicationStatus(null);
+          setShowForm(false); // Initially, do not show the form, wait for "Start" button click
         }
 
       } catch (error) {
@@ -232,7 +235,7 @@ export default function ApplicationSubmissionProcess() {
       } else {
         console.error("Submission failed:", data);
         alert(`Failed to submit application: ${data.error || 'Unknown error'}`);
-        // If the error is due to existing application, update state
+        // If the error is due to existing application, update state and redirect to message
         if (res.status === 409) { // 409 Conflict status for existing application
           setHasExistingApplication(true);
           // Re-fetch existing application status to ensure it's accurate
@@ -246,6 +249,7 @@ export default function ApplicationSubmissionProcess() {
           } else {
             setExistingApplicationStatus("Unknown");
           }
+          setShowForm(false); // Hide the form and show the message
         }
       }
     } catch (error) {
@@ -265,7 +269,7 @@ export default function ApplicationSubmissionProcess() {
     );
   }
 
-  // Conditionally render form or message based on existing application
+  // Conditionally render message if application already exists
   if (hasExistingApplication) {
     let statusMessage = "";
     let statusColor = "";
@@ -312,131 +316,157 @@ export default function ApplicationSubmissionProcess() {
     );
   }
 
-  // Render the form if no existing application
+  // NEW: Render "Start New Application" button if no existing application and form is not yet shown
+  if (!hasExistingApplication && !showForm) {
+    return (
+      <>
+        <UserHeader />
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
+          <div className="bg-white p-8 rounded-lg shadow-md text-center">
+            <h2 className="text-2xl font-bold text-[#004432] mb-4">Ready to Submit Your Application?</h2>
+            <p className="text-gray-700 mb-6">
+              You haven&#39;t submitted an application yet. Click the button below to start your application process.
+            </p>
+            <button
+              onClick={() => setShowForm(true)} // Clicking this button will show the form
+              className="bg-[#004432] text-white px-6 py-3 rounded-md font-semibold hover:bg-[#003522] transition"
+            >
+              Start New Application
+            </button>
+          </div>
+        </div>
+        <UserFooter />
+      </>
+    );
+  }
+
+  // Render the form steps if no existing application and showForm is true
   return (
     <>
       <UserHeader />
 
-      <section className="my-10">
-        <h2 className="text-center font-bold text-[#004432] lg:text-4xl md:text-2xl text-xl">
-          APPLICATION SUBMISSION
-        </h2>
+      {step === 1 && (
+        <section className="my-10">
+          <h2 className="text-center font-bold text-[#004432] lg:text-4xl md:text-2xl text-xl">
+            APPLICATION SUBMISSION
+          </h2>
 
-        <section className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
-          {/* Notes at the beginning of the form */}
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
-            <p><strong>Note:</strong> Student must clear the exam within 5 years if they fail in any class. If who haven&#39;t completed all exams within 5 years will be required to retake the entire examination series. Just a validation message.</p>
-          </div>
-          <div className="mb-6 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
-            <p><strong>Note:</strong> Date format must be shown in that format MM/DD/YYYY</p>
-          </div>
-
-          <form className="space-y-6">
-
-            {/* Certificate Selector */}
-            <div>
-              <label htmlFor="certificate" className="block mb-1 font-semibold text-gray-700">Certificate Now Required</label>
-              <select value={formData.certificate} onChange={handleChange} id="certificate" className="w-full border border-black rounded-md px-3 py-2">
-                <option value="">Select Option</option>
-                <option value="1st_class">1st class</option>
-                <option value="2nd_class">2nd class</option>
-                <option value="3rd_class">3rd class</option>
-              </select>
+          <section className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
+            {/* Notes at the beginning of the form */}
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
+              <p><strong>Note:</strong> Student must clear the exam within 5 years if they fail in any class. If who haven&#39;t completed all exams within 5 years will be required to retake the entire examination series. Just a validation message.</p>
+            </div>
+            <div className="mb-6 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
+              <p><strong>Note:</strong> Date format must be shown in that format MM/DD/YYYY</p>
             </div>
 
-            {/* Full Name & Father's Name */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form className="space-y-6">
+
+              {/* Certificate Selector */}
               <div>
-                <label htmlFor="fullName" className="block mb-1 font-semibold text-gray-700">Name in Full (Block Letters)</label>
-                <input value={formData.fullName} onChange={handleChange} id="fullName" type="text" className="w-full border border-black rounded-md px-3 py-2" />
+                <label htmlFor="certificate" className="block mb-1 font-semibold text-gray-700">Certificate Now Required</label>
+                <select value={formData.certificate} onChange={handleChange} id="certificate" className="w-full border border-black rounded-md px-3 py-2">
+                  <option value="">Select Option</option>
+                  <option value="1st_class">1st class</option>
+                  <option value="2nd_class">2nd class</option>
+                  <option value="3rd_class">3rd class</option>
+                </select>
               </div>
+
+              {/* Full Name & Father's Name */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="fullName" className="block mb-1 font-semibold text-gray-700">Name in Full (Block Letters)</label>
+                  <input value={formData.fullName} onChange={handleChange} id="fullName" type="text" className="w-full border border-black rounded-md px-3 py-2" />
+                </div>
+                <div>
+                  <label htmlFor="fatherName" className="block mb-1 font-semibold text-gray-700">Father Name (Block Letters)</label>
+                  <input value={formData.fatherName} onChange={handleChange} id="fatherName" type="text" className="w-full border border-black rounded-md px-3 py-2" />
+                </div>
+              </div>
+
+              {/* Email & Mobile */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="email" className="block mb-1 font-semibold text-gray-700">Email</label>
+                  <input value={formData.email} onChange={handleChange} id="email" type="email" className="w-full border border-black rounded-md px-3 py-2" />
+                </div>
+                <div>
+                  <label htmlFor="mobile" className="block mb-1 font-semibold text-gray-700">Mobile</label>
+                  <input value={formData.mobile} onChange={handleChange} id="mobile" type="tel" className="w-full border border-black rounded-md px-3 py-2" />
+                </div>
+              </div>
+
+              {/* Addresses */}
               <div>
-                <label htmlFor="fatherName" className="block mb-1 font-semibold text-gray-700">Father Name (Block Letters)</label>
-                <input value={formData.fatherName} onChange={handleChange} id="fatherName" type="text" className="w-full border border-black rounded-md px-3 py-2" />
+                <label htmlFor="permanentAddress" className="block mb-1 font-semibold text-gray-700">Permanent Address</label>
+                <input value={formData.permanentAddress} onChange={handleChange} id="permanentAddress" type="text" className="w-full border border-black rounded-md px-3 py-2" />
               </div>
-            </div>
 
-            {/* Email & Mobile */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="email" className="block mb-1 font-semibold text-gray-700">Email</label>
-                <input value={formData.email} onChange={handleChange} id="email" type="email" className="w-full border border-black rounded-md px-3 py-2" />
+                <label htmlFor="presentAddress" className="block mb-1 font-semibold text-gray-700">Present Address</label>
+                <input value={formData.presentAddress} onChange={handleChange} id="presentAddress" type="text" className="w-full border border-black rounded-md px-3 py-2" />
               </div>
+
+              {/* Date of Birth (CHANGED TO SINGLE INPUT MM/DD/YYYY) */}
               <div>
-                <label htmlFor="mobile" className="block mb-1 font-semibold text-gray-700">Mobile</label>
-                <input value={formData.mobile} onChange={handleChange} id="mobile" type="tel" className="w-full border border-black rounded-md px-3 py-2" />
-              </div>
-            </div>
-
-            {/* Addresses */}
-            <div>
-              <label htmlFor="permanentAddress" className="block mb-1 font-semibold text-gray-700">Permanent Address</label>
-              <input value={formData.permanentAddress} onChange={handleChange} id="permanentAddress" type="text" className="w-full border border-black rounded-md px-3 py-2" />
-            </div>
-
-            <div>
-              <label htmlFor="presentAddress" className="block mb-1 font-semibold text-gray-700">Present Address</label>
-              <input value={formData.presentAddress} onChange={handleChange} id="presentAddress" type="text" className="w-full border border-black rounded-md px-3 py-2" />
-            </div>
-
-            {/* Date of Birth (CHANGED TO SINGLE INPUT MM/DD/YYYY) */}
-            <div>
-              <label htmlFor="dob" className="block mb-1 font-semibold text-gray-700">Date of Birth (MM/DD/YYYY)</label>
-              <input
-                value={formData.dob}
-                onChange={handleChange}
-                id="dob"
-                type="text"
-                placeholder="MM/DD/YYYY"
-                className="w-full border border-black rounded-md px-3 py-2"
-                pattern="(0[1-9]|1[0-2])\/(0[1-9]|[1-2][0-9]|3[0-1])\/\d{4}"
-                title="Please enter date in MM/DD/YYYY format"
-                required
-              />
-            </div>
-
-            {/* CNIC */}
-            <div>
-              <label htmlFor="idCardNumber" className="block mb-1 font-semibold text-gray-700">Identity Card Number</label>
-              <input value={formData.idCardNumber} onChange={handleChange} id="idCardNumber" type="text" placeholder="35201-0000000-9" className="w-full border border-black rounded-md px-3 py-2" />
+                <label htmlFor="dob" className="block mb-1 font-semibold text-gray-700">Date of Birth (MM/DD/YYYY)</label>
+                <input
+                  value={formData.dob}
+                  onChange={handleChange}
+                  id="dob"
+                  type="text"
+                  placeholder="MM/DD/YYYY"
+                  className="w-full border border-black rounded-md px-3 py-2"
+                  pattern="(0[1-9]|1[0-2])\/(0[1-9]|[1-2][0-9]|3[0-1])\/\d{4}"
+                  title="Please enter date in MM/DD/YYYY format"
+                  required
+                />
               </div>
 
-            {/* File Uploads */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* CNIC */}
               <div>
-                <label className="block mb-1 font-semibold text-gray-700">Upload Front Side ID Card</label>
-                <input id="frontIdCard" onChange={handleFileChange} type="file" accept="image/*,application/pdf" className="w-full border border-black rounded-md px-3 py-2" />
+                <label htmlFor="idCardNumber" className="block mb-1 font-semibold text-gray-700">Identity Card Number</label>
+                <input value={formData.idCardNumber} onChange={handleChange} id="idCardNumber" type="text" placeholder="35201-0000000-9" className="w-full border border-black rounded-md px-3 py-2" />
+                </div>
+
+              {/* File Uploads */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-1 font-semibold text-gray-700">Upload Front Side ID Card</label>
+                  <input id="frontIdCard" onChange={handleFileChange} type="file" accept="image/*,application/pdf" className="w-full border border-black rounded-md px-3 py-2" />
+                </div>
+                <div>
+                  <label className="block mb-1 font-semibold text-gray-700">Upload Back Side ID Card</label>
+                  <input id="backIdCard" onChange={handleFileChange} type="file" accept="image/*,application/pdf" className="w-full border border-black rounded-md px-3 py-2" />
+                </div>
               </div>
+
               <div>
-                <label className="block mb-1 font-semibold text-gray-700">Upload Back Side ID Card</label>
-                <input id="backIdCard" onChange={handleFileChange} type="file" accept="image/*,application/pdf" className="w-full border border-black rounded-md px-3 py-2" />
+                <label className="block mb-1 font-semibold text-gray-700">Upload Profile Photo</label>
+                <input id="profilePhoto" onChange={handleFileChange} type="file" accept="image/*" className="w-full border border-black rounded-md px-3 py-2" />
               </div>
-            </div>
 
-            <div>
-              <label className="block mb-1 font-semibold text-gray-700">Upload Profile Photo</label>
-              <input id="profilePhoto" onChange={handleFileChange} type="file" accept="image/*" className="w-full border border-black rounded-md px-3 py-2" />
-            </div>
+              <div>
+                <label className="block mb-1 font-semibold text-gray-700">Fee Deposite / Money Order / Cash Slip (Enclose Original)</label>
+                <input id="feeSlip" onChange={handleFileChange} type="file" accept="image/*,application/pdf" className="w-full border border-black rounded-md px-3 py-2" />
+              </div>
 
-            <div>
-              <label className="block mb-1 font-semibold text-gray-700">Fee Deposite / Money Order / Cash Slip (Enclose Original)</label>
-              <input id="feeSlip" onChange={handleFileChange} type="file" accept="image/*,application/pdf" className="w-full border border-black rounded-md px-3 py-2" />
-            </div>
-
-            {/* NEXT Button */}
-            <div className="flex justify-center items-center gap-1">
-              <span className="bg-black text-white rounded-l-md py-3 px-4 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-              </span>
-              <button type="button" onClick={handleNextStep} className="cursor-pointer bg-[#004432] text-white px-8 py-3 rounded-r-md font-semibold hover:bg-[#003522] transition">
-                NEXT
-              </button>
-            </div>
-          </form>
+              {/* NEXT Button */}
+              <div className="flex justify-center items-center gap-1">
+                <span className="bg-black text-white rounded-l-md py-3 px-4 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                </span>
+                <button type="button" onClick={handleNextStep} className="cursor-pointer bg-[#004432] text-white px-8 py-3 rounded-r-md font-semibold hover:bg-[#003522] transition">
+                  NEXT
+                </button>
+              </div>
+            </form>
+          </section>
         </section>
-      </section>
+      )}
 
       {step === 2 && (
         <section className="max-w-4xl mx-auto my-10 p-6 bg-white rounded-lg shadow-md">
