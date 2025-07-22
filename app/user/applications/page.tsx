@@ -7,7 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { FaBell, FaSignOutAlt, FaEllipsisV, FaBars, FaTimes } from "react-icons/fa";
 import UserFooter from "@/app/components/UserFooter"; // Assuming this path is correct
-import UserHeader from "@/app/components/UserHeader"; // Assuming this path is correct
+// import UserHeader from "@/app/components/UserHeader"; // Assuming this path is correct
 
 // Define ApplicationData type for frontend, matching lib/models/application.ts
 interface ApplicationData {
