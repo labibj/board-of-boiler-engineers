@@ -272,28 +272,24 @@ export default function ApplicationSubmissionProcess() {
   // Conditionally render message if application already exists
   if (hasExistingApplication) {
     let statusMessage = "";
-    let statusColor = "";
+    // Removed statusColor variable as it will be directly embedded in the string
 
     switch (existingApplicationStatus) {
       case "Pending":
-        statusMessage = "Your application is currently **Pending** review by the admin. It will appear on your 'My Applications' page once accepted.";
-        statusColor = "text-yellow-600";
+        statusMessage = `Your application is currently <span class="font-semibold text-yellow-600">Pending</span> review by the admin. It will appear on your 'My Applications' page once accepted.`;
         break;
       case "Accepted":
-        statusMessage = "Your application has been **Accepted** and is available on your 'My Applications' page.";
-        statusColor = "text-green-600";
+        statusMessage = `Your application has been <span class="font-semibold text-green-600">Accepted</span> and is available on your 'My Applications' page.`;
         break;
       case "Cancelled":
-        statusMessage = "Your application has been **Cancelled**. Please check your 'My Applications' page for details or contact support.";
-        statusColor = "text-red-600";
+        statusMessage = `Your application has been <span class="font-semibold text-red-600">Cancelled</span>. Please check your 'My Applications' page for details or contact support.`;
         break;
       case "Held":
-        statusMessage = "Your application is currently **Held**. Please check your 'My Applications' page for details or await further instructions.";
-        statusColor = "text-orange-600";
+        statusMessage = `Your application is currently <span class="font-semibold text-orange-600">Held</span>. Please check your 'My Applications' page for details or await further instructions.`;
         break;
       default:
-        statusMessage = "You have already submitted an application. Its current status is unknown. Please check your 'My Applications' page.";
-        statusColor = "text-gray-600";
+        statusMessage = `You have already submitted an application. Its current status is <span class="font-semibold text-gray-600">unknown</span>. Please check your 'My Applications' page.`;
+        break;
     }
 
     return (
@@ -316,7 +312,7 @@ export default function ApplicationSubmissionProcess() {
     );
   }
 
-  // NEW: Render "Start New Application" button if no existing application and form is not yet shown
+  // Render "Start New Application" button if no existing application and form is not yet shown
   if (!hasExistingApplication && !showForm) {
     return (
       <>
@@ -482,8 +478,9 @@ export default function ApplicationSubmissionProcess() {
               <label htmlFor="certificateDiploma" className="block mb-1 font-semibold text-gray-700">Certificate. Diploma or Degree</label>
               <select value={formData.certificateDiploma} onChange={handleChange} id="certificateDiploma" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]">
                 <option value="">Select Option</option>
-                <option value="option1">Matric</option>
-                <option value="option2">FSc</option>
+                <option value="1st_class">1st class</option>
+                <option value="2nd_class">2nd class</option>
+                <option value="3rd_class">3rd class</option>
               </select>
             </div>
             <div>
