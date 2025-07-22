@@ -1,8 +1,8 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react"; // Import useCallback
 import Link from "next/link";
 import Image from "next/image";
-import { FaBell, FaSignOutAlt, FaEllipsisV, FaBars, FaTimes } from "react-icons/fa"; // FaCalendarAlt is not used in the current UI
+import { FaBell, FaSignOutAlt, FaEllipsisV, FaBars, FaTimes } from "react-icons/fa";
 import AdminFooter from "@/app/components/AdminFooter";
 import { useRouter } from "next/navigation"; // Import useRouter
 
@@ -28,7 +28,8 @@ export default function AdminApplications() {
   const [sortOrder, setSortOrder] = useState<string>("newest"); // For sorting
   const router = useRouter();
 
-  const fetchApplications = async (statusFilter: string = "All") => {
+  // Memoize fetchApplications using useCallback
+  const fetchApplications = useCallback(async (statusFilter: string = "All") => {
     setLoading(true);
     setMessage("");
     try {
@@ -67,12 +68,12 @@ export default function AdminApplications() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]); // Dependencies for useCallback: router is used inside.
 
-  // Fetch applications on component mount and when filterStatus changes
+  // Fetch applications on component mount and when filterStatus or fetchApplications changes
   useEffect(() => {
     fetchApplications(filterStatus);
-  }, [filterStatus]);
+  }, [fetchApplications, filterStatus]); // Now, fetchApplications is a stable dependency. filterStatus is still needed because the effect needs to re-run when filterStatus changes.
 
   const handleStatusUpdate = async (applicationId: string, newStatus: ApplicationStatus) => {
     setMessage("");
