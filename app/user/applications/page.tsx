@@ -74,6 +74,7 @@ export default function UserApplicationsPage() { // Renamed from MyApplicationsU
 
   return (
     <>
+      <UserHeader /> {/* Added UserHeader here */}
       <div className="flex flex-col md:flex-row min-h-screen font-sans">
         {/* Mobile Topbar */}
         <div className="md:hidden flex justify-between items-center bg-[#004432] text-white p-4">
