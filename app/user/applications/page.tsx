@@ -7,7 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { FaBell, FaSignOutAlt, FaEllipsisV, FaBars, FaTimes } from "react-icons/fa";
 import UserFooter from "@/app/components/UserFooter";
-import UserHeader from "@/app/components/UserHeader"; // Ensure UserHeader is imported and used
+// import UserHeader from "@/app/components/UserHeader"; // Ensure UserHeader is imported and used
 
 // Define ApplicationData type for frontend, matching lib/models/application.ts
 interface ApplicationData {
@@ -74,7 +74,6 @@ export default function UserApplicationsPage() {
 
   return (
     <>
-      <UserHeader /> {/* UserHeader is now included */}
       <div className="flex flex-col md:flex-row min-h-screen font-sans">
         {/* Mobile Topbar */}
         <div className="md:hidden flex justify-between items-center bg-[#004432] text-white p-4">
