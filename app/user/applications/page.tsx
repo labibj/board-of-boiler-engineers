@@ -1,13 +1,13 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { sidebarLinks } from "@/app/data/sidebarLinks"; // Assuming this path is correct
-import { handleLogout } from "@/app/utils/logout"; // Assuming this path is correct
-import useAuthRedirect from "@/app/hooks/useAuthRedirect"; // Assuming this path is correct
+import { sidebarLinks } from "@/app/data/sidebarLinks";
+import { handleLogout } from "@/app/utils/logout";
+import useAuthRedirect from "@/app/hooks/useAuthRedirect";
 import Link from "next/link";
 import Image from "next/image";
 import { FaBell, FaSignOutAlt, FaEllipsisV, FaBars, FaTimes } from "react-icons/fa";
-import UserFooter from "@/app/components/UserFooter"; // Assuming this path is correct
-// import UserHeader from "@/app/components/UserHeader"; // Assuming this path is correct
+import UserFooter from "@/app/components/UserFooter";
+import UserHeader from "@/app/components/UserHeader"; // Ensure UserHeader is imported and used
 
 // Define ApplicationData type for frontend, matching lib/models/application.ts
 interface ApplicationData {
@@ -22,7 +22,7 @@ interface ApplicationData {
   frontIdCard?: string | null;
 }
 
-export default function UserApplicationsPage() { // Renamed from MyApplicationsUser to match your provided file name
+export default function UserApplicationsPage() {
   useAuthRedirect(); // Ensures user is logged in
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [application, setApplication] = useState<ApplicationData | null>(null);
@@ -40,7 +40,7 @@ export default function UserApplicationsPage() { // Renamed from MyApplicationsU
         return;
       }
 
-      const res = await fetch("/api/user/applications", { // Fetching from the new user-specific API route
+      const res = await fetch("/api/user/applications", {
         method: "GET",
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -74,6 +74,7 @@ export default function UserApplicationsPage() { // Renamed from MyApplicationsU
 
   return (
     <>
+      <UserHeader /> {/* UserHeader is now included */}
       <div className="flex flex-col md:flex-row min-h-screen font-sans">
         {/* Mobile Topbar */}
         <div className="md:hidden flex justify-between items-center bg-[#004432] text-white p-4">
@@ -201,7 +202,15 @@ export default function UserApplicationsPage() { // Renamed from MyApplicationsU
                       )}
                     </div>
                   ) : (
-                    <p className="text-lg text-gray-700">Submit your application to see its status here.</p>
+                    // This block is shown when no application is submitted
+                    <div className="bg-gray-50 p-6 rounded-lg shadow-md border border-gray-200 w-full max-w-md text-center">
+                        <p className="text-lg text-gray-700 mb-4">You have not submitted an application yet.</p>
+                        <Link href="/user/application-submission-process">
+                            <button className="bg-[#004432] text-white px-6 py-3 rounded-md font-semibold hover:bg-[#003522] transition">
+                                Submit New Application
+                            </button>
+                        </Link>
+                    </div>
                   )}
                 </>
               )}

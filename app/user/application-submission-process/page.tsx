@@ -47,9 +47,8 @@ export default function ApplicationSubmissionProcess() {
   const [formData, setFormData] = useState<FormDataType>(initialFormData);
   const [submitting, setSubmitting] = useState(false);
   const [loadingAuth, setLoadingAuth] = useState(true);
-  const [hasExistingApplication, setHasExistingApplication] = useState(false); // State to check if application exists
-  const [existingApplicationStatus, setExistingApplicationStatus] = useState<string | null>(null); // State for existing application status
-  const [showForm, setShowForm] = useState(false); // NEW: State to control when the form steps are visible
+  const [hasExistingApplication, setHasExistingApplication] = useState(false); // NEW state
+  const [existingApplicationStatus, setExistingApplicationStatus] = useState<string | null>(null); // NEW state for status
   const router = useRouter();
 
   // Authentication check and existing application check on component mount
@@ -88,11 +87,9 @@ export default function ApplicationSubmissionProcess() {
         if (appRes.ok && appData.application) {
           setHasExistingApplication(true);
           setExistingApplicationStatus(appData.application.status);
-          setShowForm(false); // If app exists, do not show the form directly
         } else {
           setHasExistingApplication(false);
           setExistingApplicationStatus(null);
-          setShowForm(false); // Initially, do not show the form, wait for "Start" button click
         }
 
       } catch (error) {
@@ -231,25 +228,14 @@ export default function ApplicationSubmissionProcess() {
         alert("Application submitted successfully!");
         setFormData(initialFormData);
         setStep(1);
-        router.push("/user/applications"); // Redirect to applications page
+        router.push("/user/applications"); // NEW: Redirect to applications page
       } else {
         console.error("Submission failed:", data);
         alert(`Failed to submit application: ${data.error || 'Unknown error'}`);
-        // If the error is due to existing application, update state and redirect to message
+        // If the error is due to existing application, update state
         if (res.status === 409) { // 409 Conflict status for existing application
           setHasExistingApplication(true);
-          // Re-fetch existing application status to ensure it's accurate
-          const appRes = await fetch("/api/user/applications", {
-            method: "GET",
-            headers: { 'Authorization': `Bearer ${token}` },
-          });
-          const appData = await appRes.json();
-          if (appRes.ok && appData.application) {
-            setExistingApplicationStatus(appData.application.status);
-          } else {
-            setExistingApplicationStatus("Unknown");
-          }
-          setShowForm(false); // Hide the form and show the message
+          setExistingApplicationStatus("Submitted"); // Or fetch actual status if needed
         }
       }
     } catch (error) {
@@ -269,36 +255,28 @@ export default function ApplicationSubmissionProcess() {
     );
   }
 
-  // Conditionally render message if application already exists
+  // NEW: Conditionally render form or message
   if (hasExistingApplication) {
-    let statusMessage = "";
-    // Removed statusColor variable as it will be directly embedded in the string
-
-    switch (existingApplicationStatus) {
-      case "Pending":
-        statusMessage = `Your application is currently <span class="font-semibold text-yellow-600">Pending</span> review by the admin. It will appear on your 'My Applications' page once accepted.`;
-        break;
-      case "Accepted":
-        statusMessage = `Your application has been <span class="font-semibold text-green-600">Accepted</span> and is available on your 'My Applications' page.`;
-        break;
-      case "Cancelled":
-        statusMessage = `Your application has been <span class="font-semibold text-red-600">Cancelled</span>. Please check your 'My Applications' page for details or contact support.`;
-        break;
-      case "Held":
-        statusMessage = `Your application is currently <span class="font-semibold text-orange-600">Held</span>. Please check your 'My Applications' page for details or await further instructions.`;
-        break;
-      default:
-        statusMessage = `You have already submitted an application. Its current status is <span class="font-semibold text-gray-600">unknown</span>. Please check your 'My Applications' page.`;
-        break;
-    }
-
     return (
       <>
         <UserHeader />
         <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
           <div className="bg-white p-8 rounded-lg shadow-md text-center">
             <h2 className="text-2xl font-bold text-[#004432] mb-4">Application Already Submitted</h2>
-            <p className="text-gray-700 mb-4" dangerouslySetInnerHTML={{ __html: statusMessage }} />
+            <p className="text-gray-700 mb-4">
+              You have already submitted an application. Its current status is:{" "}
+              <span className={`font-semibold ${
+                existingApplicationStatus === 'Accepted' ? 'text-green-600' :
+                existingApplicationStatus === 'Pending' ? 'text-yellow-600' :
+                existingApplicationStatus === 'Held' ? 'text-orange-600' :
+                'text-red-600'
+              }`}>
+                {existingApplicationStatus || "Unknown"}
+              </span>.
+            </p>
+            <p className="text-gray-700 mb-6">
+              You can view your application details on the &quot;My Applications&quot; page.
+            </p>
             <button
               onClick={() => router.push("/user/applications")}
               className="bg-[#004432] text-white px-6 py-3 rounded-md font-semibold hover:bg-[#003522] transition"
@@ -312,31 +290,6 @@ export default function ApplicationSubmissionProcess() {
     );
   }
 
-  // Render "Start New Application" button if no existing application and form is not yet shown
-  if (!hasExistingApplication && !showForm) {
-    return (
-      <>
-        <UserHeader />
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
-          <div className="bg-white p-8 rounded-lg shadow-md text-center">
-            <h2 className="text-2xl font-bold text-[#004432] mb-4">Ready to Submit Your Application?</h2>
-            <p className="text-gray-700 mb-6">
-              You haven&#39;t submitted an application yet. Click the button below to start your application process.
-            </p>
-            <button
-              onClick={() => setShowForm(true)} // Clicking this button will show the form
-              className="bg-[#004432] text-white px-6 py-3 rounded-md font-semibold hover:bg-[#003522] transition"
-            >
-              Start New Application
-            </button>
-          </div>
-        </div>
-        <UserFooter />
-      </>
-    );
-  }
-
-  // Render the form steps if no existing application and showForm is true
   return (
     <>
       <UserHeader />
@@ -478,9 +431,8 @@ export default function ApplicationSubmissionProcess() {
               <label htmlFor="certificateDiploma" className="block mb-1 font-semibold text-gray-700">Certificate. Diploma or Degree</label>
               <select value={formData.certificateDiploma} onChange={handleChange} id="certificateDiploma" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]">
                 <option value="">Select Option</option>
-                <option value="1st_class">1st class</option>
-                <option value="2nd_class">2nd class</option>
-                <option value="3rd_class">3rd class</option>
+                <option value="option1">Matric</option>
+                <option value="option2">FSc</option>
               </select>
             </div>
             <div>
