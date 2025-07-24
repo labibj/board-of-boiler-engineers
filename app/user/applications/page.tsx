@@ -7,7 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { FaBell, FaSignOutAlt, FaEllipsisV, FaBars, FaTimes } from "react-icons/fa";
 import UserFooter from "@/app/components/UserFooter";
-// import UserHeader from "@/app/components/UserHeader"; // Ensure UserHeader is imported and used
+import UserHeader from "@/app/components/UserHeader";
 
 // Define ApplicationData type for frontend, matching lib/models/application.ts
 interface ApplicationData {
@@ -31,7 +31,7 @@ export default function UserApplicationsPage() {
 
   const fetchUserApplication = async () => {
     setLoading(true);
-    setMessage("");
+    setMessage(""); // Clear previous messages
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -40,6 +40,7 @@ export default function UserApplicationsPage() {
         return;
       }
 
+      // NEW: Fetch from the userId-based API
       const res = await fetch("/api/user/applications", {
         method: "GET",
         headers: {
@@ -51,18 +52,20 @@ export default function UserApplicationsPage() {
       if (res.ok) {
         if (data.application) {
           setApplication(data.application);
-          setMessage(`✅ Your application status is: ${data.application.status}`);
+          setMessage(`✅ Application loaded successfully.`);
         } else {
-          setApplication(null);
+          setApplication(null); // Explicitly set to null if no application
           setMessage("ℹ️ You have not submitted an application yet.");
         }
       } else {
         setMessage(`❌ Failed to load application status: ${data.error || 'Unknown error'}`);
         console.error("Failed to fetch user application:", data);
+        setApplication(null); // Ensure application is null on error
       }
     } catch (err) {
       console.error("Fetch user application error:", err);
       setMessage("❌ An error occurred while fetching your application status.");
+      setApplication(null); // Ensure application is null on network error
     } finally {
       setLoading(false);
     }
@@ -74,7 +77,7 @@ export default function UserApplicationsPage() {
 
   return (
     <>
-      
+      <UserHeader />
       <div className="flex flex-col md:flex-row min-h-screen font-sans">
         {/* Mobile Topbar */}
         <div className="md:hidden flex justify-between items-center bg-[#004432] text-white p-4">
