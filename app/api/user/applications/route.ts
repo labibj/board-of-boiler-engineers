@@ -1,7 +1,7 @@
 // app/api/user/applications/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-import { findApplicationByUserId, ApplicationData } from "@/lib/models/application";
+import { findApplicationByUserId } from "@/lib/models/application"; // Removed ApplicationData
 
 // Define JWT payload type for user
 interface JwtPayload {
@@ -37,6 +37,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Return the found application. No need to filter password here as ApplicationData doesn't have it.
+    // The type ApplicationData is implicitly handled by findApplicationByUserId's return type.
     return NextResponse.json({ success: true, application: application });
 
   } catch (err) {
