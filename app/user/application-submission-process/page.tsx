@@ -506,10 +506,7 @@ export default function ApplicationSubmissionProcess() {
           <section className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
             {/* Notes at the beginning of the form */}
             <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
-              <p><strong>Note:</strong> Student must clear the exam within 5 years if they fail in any class. If who haven&#39;t completed all exams within 5 years will be required to retake the entire examination series. Just a validation message.</p>
-            </div>
-            <div className="mb-6 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
-              <p><strong>Note:</strong> Date format must be shown in that format MM/DD/YYYY</p>
+              <p><strong>Note:</strong> BSc Engg Degree in Mechanical, Industries & Mechatronices holders are eligibile to appear directly in the 2nd Class examination.</p>
             </div>
 
             <form className="space-y-6">
