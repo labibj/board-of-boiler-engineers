@@ -44,12 +44,18 @@ export default function AdminHeader() {
             </div>
 
             {/* Registration/Login button - now visible on all screens */}
-            <div className="flex justify-center lg:justify-end">
+            <div className="flex gap-5 justify-center lg:justify-end">
+              <a
+                href="/register"
+                className="inline-block bg-[#004432] text-white px-4 py-2 sm:py-3 rounded-tl-lg rounded-br-lg hover:bg-[#03614d] font-medium whitespace-nowrap transition text-xs sm:text-sm md:text-base"
+              >
+                Registration
+              </a>
               <a
                 href="/login"
                 className="inline-block bg-[#004432] text-white px-4 py-2 sm:py-3 rounded-tl-lg rounded-br-lg hover:bg-[#03614d] font-medium whitespace-nowrap transition text-xs sm:text-sm md:text-base"
               >
-                Registration / Login
+                Login
               </a>
             </div>
           </div>
