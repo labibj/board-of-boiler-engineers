@@ -33,6 +33,11 @@ export async function POST(req: NextRequest) {
     const userId = decoded._id;
     const userEmail = decoded.email;
 
+    // CNIC regex pattern: 5 digits - 7 digits - 1 digit
+    const cnicPattern = /^\d{5}-\d{7}-\d{1}$/;
+    // Date format regex for MM/DD/YYYY
+    const dateFormatRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[1-2][0-9]|3[0-1])\/\d{4}$/;
+
     // NEW: Check if user has already submitted an application
     const existingApplication = await findApplicationByUserId(userId);
     if (existingApplication) {
@@ -46,6 +51,24 @@ export async function POST(req: NextRequest) {
         fields[key] = value;
       }
     });
+
+    // Backend validation for CNIC and Dates
+    if (!cnicPattern.test(fields.idCardNumber)) {
+      return NextResponse.json({ error: "Invalid CNIC format. Must be 00000-0000000-0." }, { status: 400 });
+    }
+    if (!dateFormatRegex.test(fields.dob)) {
+      return NextResponse.json({ error: "Invalid Date of Birth format. Must be MM/DD/YYYY." }, { status: 400 });
+    }
+    if (fields.degreeDate && !dateFormatRegex.test(fields.degreeDate)) {
+      return NextResponse.json({ error: "Invalid Degree Date format. Must be MM/DD/YYYY." }, { status: 400 });
+    }
+    if (fields.issueDate && !dateFormatRegex.test(fields.issueDate)) {
+      return NextResponse.json({ error: "Invalid Issue Date format. Must be MM/DD/YYYY." }, { status: 400 });
+    }
+    if (fields.dateStartService && !dateFormatRegex.test(fields.dateStartService)) {
+      return NextResponse.json({ error: "Invalid Date Start of Service format. Must be MM/DD/YYYY." }, { status: 400 });
+    }
+
 
     // Helper function to upload file to Cloudinary
     const uploadFile = async (file: FormDataEntryValue | null): Promise<string | null> => {

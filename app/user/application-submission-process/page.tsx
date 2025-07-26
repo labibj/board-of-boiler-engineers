@@ -1,14 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { sidebarLinks } from "@/app/data/sidebarLinks";
-import { handleLogout } from "@/app/utils/logout";
-import Link from "next/link";
-import Image from "next/image";
-import { FaBell, FaSignOutAlt, FaEllipsisV, FaBars, FaTimes } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-// import UserHeader from "@/app/components/UserHeader";
+import { handleLogout } from "@/app/utils/logout";
+import UserHeader from "@/app/components/UserHeader"; // Ensure UserHeader is imported
 import UserFooter from "@/app/components/UserFooter";
+import { FaBell, FaSignOutAlt, FaEllipsisV, FaBars, FaTimes } from "react-icons/fa"; // Import icons
+import Link from "next/link"; // Import Link for sidebar
+import Image from "next/image";
 
 // Initial form structure
 const initialFormData = {
@@ -23,32 +22,27 @@ const initialFormData = {
   idCardNumber: "",
   departmentName: "",
   qualification: "",
-  degreeDay: "",
-  degreeMonth: "",
-  degreeYear: "",
+  degreeDate: "", // Combined field for Degree Date (MM/DD/YYYY)
   frontIdCard: null,
   backIdCard: null,
   profilePhoto: null,
   feeSlip: null,
   certificateDiploma: "",
   certificateDiplomaFile: null, // For the actual file upload
-  issueDay: "",
-  issueMonth: "",
-  issueYear: "",
+  issueDate: "", // Combined field for Issue Date (MM/DD/YYYY)
   biolerRegistryNo: "",
   heatingSurface: "",
   workingPressure: "",
   factoryNameAddress: "",
   candidateDesignation: "",
   actualTime: "",
-  dateStartService: "",
+  dateStartService: "", // Combined field for Date Start of Service (MM/DD/YYYY)
   serviceLetter: null, // For the service letter file upload
 };
 
 type FormDataType = typeof initialFormData;
 
 export default function ApplicationSubmissionProcess() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<FormDataType>(initialFormData);
   const [submitting, setSubmitting] = useState(false);
@@ -56,7 +50,13 @@ export default function ApplicationSubmissionProcess() {
   const [hasExistingApplication, setHasExistingApplication] = useState(false); // State to check if application exists
   const [existingApplicationStatus, setExistingApplicationStatus] = useState<string | null>(null); // State for existing application status
   const [showForm, setShowForm] = useState(false); // State to control when the form steps are visible
+  const [sidebarOpen, setSidebarOpen] = useState(false); // State for sidebar
   const router = useRouter();
+
+  // CNIC regex pattern: 5 digits - 7 digits - 1 digit
+  const cnicPattern = /^\d{5}-\d{7}-\d{1}$/;
+  // Date format regex for MM/DD/YYYY
+  const dateFormatRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[1-2][0-9]|3[0-1])\/\d{4}$/;
 
   // Authentication check and existing application check on component mount
   useEffect(() => {
@@ -125,18 +125,9 @@ export default function ApplicationSubmissionProcess() {
     }
   };
 
-  // Helper for DOB validation (MM/DD/YYYY)
-  const isValidDate = (dateString: string) => {
-    const regex = /^(0[1-9]|1[0-2])\/(0[1-9]|[1-2][0-9]|3[0-1])\/\d{4}$/;
-    if (!regex.test(dateString)) return false;
-
-    const parts = dateString.split('/');
-    const month = parseInt(parts[0], 10);
-    const day = parseInt(parts[1], 10);
-    const year = parseInt(parts[2], 10);
-
-    const date = new Date(year, month - 1, day);
-    return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+  // Helper for MM/DD/YYYY date format validation
+  const isValidDateFormat = (dateString: string) => {
+    return dateFormatRegex.test(dateString);
   };
 
   const handleNextStep = () => {
@@ -166,7 +157,14 @@ export default function ApplicationSubmissionProcess() {
         return;
       }
 
-      if (!isValidDate(dob)) {
+      // CNIC validation
+      if (!cnicPattern.test(idCardNumber)) {
+        alert("Please enter a valid CNIC in 00000-0000000-0 format.");
+        return;
+      }
+
+      // Date of Birth validation
+      if (!isValidDateFormat(dob)) {
         alert("Please enter a valid Date of Birth in MM/DD/YYYY format.");
         return;
       }
@@ -174,17 +172,54 @@ export default function ApplicationSubmissionProcess() {
     } else if (step === 2) {
       const {
         departmentName,
-        degreeDay,
-        degreeMonth,
-        degreeYear,
+        degreeDate, // Use combined degreeDate
         certificateDiplomaFile,
       } = formData;
 
       if (
-        !departmentName || !degreeDay || !degreeMonth || !degreeYear ||
-        !certificateDiplomaFile
+        !departmentName || !degreeDate || !certificateDiplomaFile
       ) {
         alert("Please fill out all required fields and upload the certificate/diploma file in Step 2.");
+        return;
+      }
+
+      // Degree Date validation
+      if (!isValidDateFormat(degreeDate)) {
+        alert("Please enter a valid Date of Obtaining the Certificate/Diploma/Degree in MM/DD/YYYY format.");
+        return;
+      }
+
+    } else if (step === 3) {
+      const {
+        issueDate, // Use combined issueDate
+        dateStartService, // Use combined dateStartService
+        biolerRegistryNo,
+        heatingSurface,
+        workingPressure,
+        factoryNameAddress,
+        candidateDesignation,
+        actualTime,
+        serviceLetter,
+      } = formData;
+
+      if (
+        !issueDate || !biolerRegistryNo || !heatingSurface || !workingPressure ||
+        !factoryNameAddress || !candidateDesignation || !actualTime || !dateStartService ||
+        !serviceLetter
+      ) {
+        alert("Please fill out all required fields and upload the service letter in Step 3.");
+        return;
+      }
+
+      // Issue Date validation
+      if (!isValidDateFormat(issueDate)) {
+        alert("Please enter a valid Issue Date in MM/DD/YYYY format.");
+        return;
+      }
+
+      // Date Start of Service validation
+      if (!isValidDateFormat(dateStartService)) {
+        alert("Please enter a valid Date Start of Service in MM/DD/YYYY format.");
         return;
       }
     }
@@ -299,7 +334,7 @@ export default function ApplicationSubmissionProcess() {
 
     return (
       <>
-        {/* <UserHeader /> */}
+        <UserHeader />
         <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
           <div className="bg-white p-8 rounded-lg shadow-md text-center">
             <h2 className="text-2xl font-bold text-[#004432] mb-4">Application Already Submitted</h2>
@@ -321,7 +356,7 @@ export default function ApplicationSubmissionProcess() {
   if (!hasExistingApplication && !showForm) {
     return (
       <>
-        {/* <UserHeader /> */}
+        <UserHeader />
         <div className="flex flex-col md:flex-row min-h-screen font-sans">
           {/* Mobile Topbar */}
           <div className="md:hidden flex justify-between items-center bg-[#004432] text-white p-4">
@@ -361,30 +396,37 @@ export default function ApplicationSubmissionProcess() {
             </div>
             {/* Sidebar Content */}
             <nav className="flex flex-col space-y-4 w-full">
-              {sidebarLinks.map((item, index) =>
-                item.isLogout ? (
-                  <button
-                    key={index}
-                    onClick={() => handleLogout("/user/login")}
-                    className="flex items-center space-x-3 hover:text-gray-300 w-full text-left cursor-pointer"
-                  >
-                    <Image src={item.icon} alt="Logout Icon" width={20} height={20} />
-                    <span className="font-semibold tracking-wide">{item.label}</span>
-                  </button>
-                ) : (
-                  <div className="flex flex-col space-y-4 w-full" key={index}>
-                  <Link
-                    key={index}
-                    href={item.href}
-                    className="flex items-center space-x-3 hover:text-gray-300"
-                  >
-                    <Image src={item.icon} alt={`${item.label} Icon`} width={20} height={20} />
-                    <span className="font-semibold tracking-wide">{item.label}</span>
-                  </Link>
-                    <hr className="border-t border-white w-full" />
-                  </div>
-                )
-              )}
+              {/* Assuming sidebarLinks is defined elsewhere and imported */}
+              {/* Example of a sidebar link, replace with actual sidebarLinks mapping */}
+              <Link href="/user/dashboard" className="flex items-center space-x-3 hover:text-gray-300">
+                <Image src="/dashboard-icon.png" alt="Dashboard Icon" width={20} height={20} />
+                <span className="font-semibold tracking-wide">Dashboard</span>
+              </Link>
+              <hr className="border-t border-white w-full" />
+              <Link href="/user/profile" className="flex items-center space-x-3 hover:text-gray-300">
+                <Image src="/profile-icon.png" alt="Profile Icon" width={20} height={20} />
+                <span className="font-semibold tracking-wide">Profile</span>
+              </Link>
+              <hr className="border-t border-white w-full" />
+              <Link href="/user/applications" className="flex items-center space-x-3 hover:text-gray-300">
+                <Image src="/application-icon.png" alt="Applications Icon" width={20} height={20} />
+                <span className="font-semibold tracking-wide">Applications</span>
+              </Link>
+              <hr className="border-t border-white w-full" />
+              <Link href="/user/roll-no-slip" className="flex items-center space-x-3 hover:text-gray-300">
+                <Image src="/logout-icon.png" alt="Roll No Slip Icon" width={20} height={20} />
+                <span className="font-semibold tracking-wide">Roll No Slip</span>
+              </Link>
+              <hr className="border-t border-white w-full" />
+              <Link href="/user/result" className="flex items-center space-x-3 hover:text-gray-300">
+                <Image src="/result-icon.png" alt="Result Icon" width={20} height={20} />
+                <span className="font-semibold tracking-wide">Result</span>
+              </Link>
+              <hr className="border-t border-white w-full" />
+              <button onClick={() => handleLogout("/user/login")} className="flex items-center space-x-3 hover:text-gray-300 w-full text-left cursor-pointer">
+                <FaSignOutAlt className="w-5 h-5" />
+                <span className="font-semibold tracking-wide">Logout</span>
+              </button>
             </nav>
           </aside>
         {/* Main Content */}
@@ -425,7 +467,7 @@ export default function ApplicationSubmissionProcess() {
   // Render the form steps if no existing application and showForm is true
   return (
     <>
-      {/* <UserHeader /> */}
+      <UserHeader />
       <div className="flex flex-col md:flex-row min-h-screen font-sans">
         {/* Mobile Topbar */}
         <div className="md:hidden flex justify-between items-center bg-[#004432] text-white p-4">
@@ -465,30 +507,37 @@ export default function ApplicationSubmissionProcess() {
           </div>
           {/* Sidebar Content */}
           <nav className="flex flex-col space-y-4 w-full">
-            {sidebarLinks.map((item, index) =>
-              item.isLogout ? (
-                <button
-                  key={index}
-                  onClick={() => handleLogout("/user/login")}
-                  className="flex items-center space-x-3 hover:text-gray-300 w-full text-left cursor-pointer"
-                >
-                  <Image src={item.icon} alt="Logout Icon" width={20} height={20} />
-                  <span className="font-semibold tracking-wide">{item.label}</span>
-                </button>
-              ) : (
-                <div className="flex flex-col space-y-4 w-full" key={index}>
-                <Link
-                  key={index}
-                  href={item.href}
-                  className="flex items-center space-x-3 hover:text-gray-300"
-                >
-                  <Image src={item.icon} alt={`${item.label} Icon`} width={20} height={20} />
-                  <span className="font-semibold tracking-wide">{item.label}</span>
-                </Link>
-                  <hr className="border-t border-white w-full" />
-                </div>
-              )
-            )}
+            {/* Assuming sidebarLinks is defined elsewhere and imported */}
+            {/* Example of a sidebar link, replace with actual sidebarLinks mapping */}
+            <Link href="/user/dashboard" className="flex items-center space-x-3 hover:text-gray-300">
+              <Image src="/dashboard-icon.png" alt="Dashboard Icon" width={20} height={20} />
+              <span className="font-semibold tracking-wide">Dashboard</span>
+            </Link>
+            <hr className="border-t border-white w-full" />
+            <Link href="/user/profile" className="flex items-center space-x-3 hover:text-gray-300">
+              <Image src="/profile-icon.png" alt="Profile Icon" width={20} height={20} />
+              <span className="font-semibold tracking-wide">Profile</span>
+            </Link>
+            <hr className="border-t border-white w-full" />
+            <Link href="/user/applications" className="flex items-center space-x-3 hover:text-gray-300">
+              <Image src="/application-icon.png" alt="Applications Icon" width={20} height={20} />
+              <span className="font-semibold tracking-wide">Applications</span>
+            </Link>
+            <hr className="border-t border-white w-full" />
+            <Link href="/user/roll-no-slip" className="flex items-center space-x-3 hover:text-gray-300">
+              <Image src="/logout-icon.png" alt="Roll No Slip Icon" width={20} height={20} />
+              <span className="font-semibold tracking-wide">Roll No Slip</span>
+            </Link>
+            <hr className="border-t border-white w-full" />
+            <Link href="/user/result" className="flex items-center space-x-3 hover:text-gray-300">
+              <Image src="/result-icon.png" alt="Result Icon" width={20} height={20} />
+              <span className="font-semibold tracking-wide">Result</span>
+            </Link>
+            <hr className="border-t border-white w-full" />
+            <button onClick={() => handleLogout("/user/login")} className="flex items-center space-x-3 hover:text-gray-300 w-full text-left cursor-pointer">
+              <FaSignOutAlt className="w-5 h-5" />
+              <span className="font-semibold tracking-wide">Logout</span>
+            </button>
           </nav>
         </aside>
 
@@ -651,12 +700,18 @@ export default function ApplicationSubmissionProcess() {
               <input value={formData.departmentName} onChange={handleChange} type="text" id="departmentName" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
             </div>
             <div>
-              <label className="block mb-1 font-semibold text-gray-700">Date of Obtaining the Certificate. Diploma / Degree</label>
-              <div className="flex flex-col md:flex-row gap-2">
-                <input value={formData.degreeDay} onChange={handleChange} id="degreeDay" type="number" placeholder="Day" min="1" max="31" className="w-full md:w-1/3 border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
-                <input value={formData.degreeMonth} onChange={handleChange} id="degreeMonth" type="number" placeholder="Month" min="1" max="12" className="w-full md:w-1/3 border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
-                <input value={formData.degreeYear} onChange={handleChange} id="degreeYear" type="number" placeholder="Year" min="1900" max="2099" className="w-full md:w-1/3 border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
-              </div>
+              <label className="block mb-1 font-semibold text-gray-700">Date of Obtaining the Certificate. Diploma / Degree (MM/DD/YYYY)</label>
+              <input
+                  value={formData.degreeDate}
+                  onChange={handleChange}
+                  id="degreeDate"
+                  type="text"
+                  placeholder="MM/DD/YYYY"
+                  className="w-full border border-black rounded-md px-3 py-2"
+                  pattern="(0[1-9]|1[0-2])\/(0[1-9]|[1-2][0-9]|3[0-1])\/\d{4}"
+                  title="Please enter date in MM/DD/YYYY format"
+                  required
+                />
             </div>
                         <div>
             <label className="block mb-1 font-semibold text-gray-700">Upload Certificate. Diploma / Degree</label>
@@ -693,12 +748,18 @@ export default function ApplicationSubmissionProcess() {
           </h6>
           <div className="space-y-4">
                         <div>
-              <label className="block mb-1 font-semibold text-gray-700">Issue Date</label>
-              <div className="flex flex-col md:flex-row gap-2">
-                <input value={formData.issueDay} onChange={handleChange} id="issueDay" type="number" placeholder="Day" min="1" max="31" className="w-full md:w-1/3 border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
-                <input value={formData.issueMonth} onChange={handleChange} id="issueMonth" type="number" placeholder="Month" min="1" max="12" className="w-full md:w-1/3 border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
-                <input value={formData.issueYear} onChange={handleChange} id="issueYear" type="number" placeholder="Year" min="1900" max="2099" className="w-full md:w-1/3 border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
-              </div>
+              <label className="block mb-1 font-semibold text-gray-700">Issue Date (MM/DD/YYYY)</label>
+              <input
+                  value={formData.issueDate}
+                  onChange={handleChange}
+                  id="issueDate"
+                  type="text"
+                  placeholder="MM/DD/YYYY"
+                  className="w-full border border-black rounded-md px-3 py-2"
+                  pattern="(0[1-9]|1[0-2])\/(0[1-9]|[1-2][0-9]|3[0-1])\/\d{4}"
+                  title="Please enter date in MM/DD/YYYY format"
+                  required
+                />
             </div>
             <div>
               <label htmlFor="biolerRegistryNo" className="block mb-1 font-semibold text-gray-700">Boiler Registry/Maker No.</label>
@@ -732,8 +793,18 @@ export default function ApplicationSubmissionProcess() {
                 <input value={formData.actualTime} onChange={handleChange} type="text" id="actualTime" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
               </div>
               <div>
-                <label htmlFor="dateStartService" className="block mb-1 font-semibold text-gray-700">Date Start of Service</label>
-                <input value={formData.dateStartService} onChange={handleChange} type="text" id="dateStartService" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
+                <label htmlFor="dateStartService" className="block mb-1 font-semibold text-gray-700">Date Start of Service (MM/DD/YYYY)</label>
+                <input
+                  value={formData.dateStartService}
+                  onChange={handleChange}
+                  id="dateStartService"
+                  type="text"
+                  placeholder="MM/DD/YYYY"
+                  className="w-full border border-black rounded-md px-3 py-2"
+                  pattern="(0[1-9]|1[0-2])\/(0[1-9]|[1-2][0-9]|3[0-1])\/\d{4}"
+                  title="Please enter date in MM/DD/YYYY format"
+                  required
+                />
               </div>
             </div>
                             <div>
