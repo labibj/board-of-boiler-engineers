@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { sidebarLinks } from "@/app/data/sidebarLinks";
 import { handleLogout } from "@/app/utils/logout";
-import useAuthRedirect from "@/app/hooks/useAuthRedirect";
 import Link from "next/link";
 import Image from "next/image";
 import { FaBell, FaSignOutAlt, FaEllipsisV, FaBars, FaTimes } from "react-icons/fa";
