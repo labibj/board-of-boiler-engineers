@@ -3,11 +3,29 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { handleLogout } from "@/app/utils/logout";
-import UserHeader from "@/app/components/UserHeader"; // Ensure UserHeader is imported
+import UserHeader from "@/app/components/UserHeader";
 import UserFooter from "@/app/components/UserFooter";
-import { FaBell, FaSignOutAlt, FaEllipsisV, FaBars, FaTimes } from "react-icons/fa"; // Import icons
-import Link from "next/link"; // Import Link for sidebar
+import { FaBell, FaSignOutAlt, FaEllipsisV, FaBars, FaTimes } from "react-icons/fa";
+import Link from "next/link";
 import Image from "next/image";
+
+// Flatpickr CSS and JS via CDN
+const FlatpickrCSS = (
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+  />
+);
+const FlatpickrJS = (
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+);
+
+// Declare global Flatpickr for TypeScript
+declare global {
+  interface Window {
+    flatpickr: any; // Using 'any' for simplicity, or you can import Flatpickr types if available
+  }
+}
 
 // Initial form structure
 const initialFormData = {
@@ -47,10 +65,10 @@ export default function ApplicationSubmissionProcess() {
   const [formData, setFormData] = useState<FormDataType>(initialFormData);
   const [submitting, setSubmitting] = useState(false);
   const [loadingAuth, setLoadingAuth] = useState(true);
-  const [hasExistingApplication, setHasExistingApplication] = useState(false); // State to check if application exists
-  const [existingApplicationStatus, setExistingApplicationStatus] = useState<string | null>(null); // State for existing application status
-  const [showForm, setShowForm] = useState(false); // State to control when the form steps are visible
-  const [sidebarOpen, setSidebarOpen] = useState(false); // State for sidebar
+  const [hasExistingApplication, setHasExistingApplication] = useState(false);
+  const [existingApplicationStatus, setExistingApplicationStatus] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
 
   // CNIC regex pattern: 5 digits - 7 digits - 1 digit
@@ -68,7 +86,6 @@ export default function ApplicationSubmissionProcess() {
       }
 
       try {
-        // First, verify authentication (e.g., by fetching user profile)
         const authRes = await fetch("/api/user/profile", {
           method: "GET",
           headers: {
@@ -82,7 +99,6 @@ export default function ApplicationSubmissionProcess() {
           return;
         }
 
-        // Then, check for existing application using the new userId-based API
         const appRes = await fetch("/api/user/applications", {
           method: "GET",
           headers: {
@@ -94,11 +110,11 @@ export default function ApplicationSubmissionProcess() {
         if (appRes.ok && appData.application) {
           setHasExistingApplication(true);
           setExistingApplicationStatus(appData.application.status);
-          setShowForm(false); // If app exists, do not show the form directly
+          setShowForm(false);
         } else {
           setHasExistingApplication(false);
           setExistingApplicationStatus(null);
-          setShowForm(false); // Initially, do not show the form, wait for "Start" button click
+          setShowForm(false);
         }
 
       } catch (error) {
@@ -112,6 +128,41 @@ export default function ApplicationSubmissionProcess() {
 
     checkAuthAndApplication();
   }, [router]);
+
+  // Initialize Flatpickr for date fields
+  useEffect(() => {
+    if (showForm) { // Only initialize if the form is visible
+      // Function to initialize a single flatpickr instance
+      const initFlatpickr = (id: string, initialValue: string) => {
+        const element = document.getElementById(id) as HTMLInputElement;
+        if (element && typeof window.flatpickr !== 'undefined') {
+          // Destroy existing instance to prevent duplicates if component re-renders
+          if ((element as any)._flatpickr) {
+            (element as any)._flatpickr.destroy();
+          }
+          const fp = window.flatpickr(element, {
+            dateFormat: "m/d/Y", // MM/DD/YYYY format
+            defaultDate: initialValue,
+            onChange: (selectedDates: Date[], dateStr: string) => { // Added types for onChange parameters
+              setFormData((prev) => ({ ...prev, [id]: dateStr }));
+            },
+          });
+          // Store the instance on the element for later destruction
+          (element as any)._flatpickr = fp;
+        }
+      };
+
+      // Initialize based on current step
+      if (step === 1) {
+        initFlatpickr("dob", formData.dob);
+      } else if (step === 2) {
+        initFlatpickr("degreeDate", formData.degreeDate);
+      } else if (step === 3) {
+        initFlatpickr("issueDate", formData.issueDate);
+        initFlatpickr("dateStartService", formData.dateStartService);
+      }
+    }
+  }, [step, showForm, formData.dob, formData.degreeDate, formData.issueDate, formData.dateStartService]); // Re-run when step or form visibility changes, or initial values change
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { id, value } = e.target;
@@ -276,10 +327,8 @@ export default function ApplicationSubmissionProcess() {
       } else {
         console.error("Submission failed:", data);
         alert(`Failed to submit application: ${data.error || 'Unknown error'}`);
-        // If the error is due to existing application, update state and redirect to message
-        if (res.status === 409) { // 409 Conflict status for existing application
+        if (res.status === 409) {
           setHasExistingApplication(true);
-          // Re-fetch existing application status to ensure it's accurate
           const appRes = await fetch("/api/user/applications", {
             method: "GET",
             headers: { 'Authorization': `Bearer ${token}` },
@@ -290,7 +339,7 @@ export default function ApplicationSubmissionProcess() {
           } else {
             setExistingApplicationStatus("Unknown");
           }
-          setShowForm(false); // Hide the form and show the message
+          setShowForm(false);
         }
       }
     } catch (error) {
@@ -467,6 +516,8 @@ export default function ApplicationSubmissionProcess() {
   // Render the form steps if no existing application and showForm is true
   return (
     <>
+      {FlatpickrCSS} {/* Include Flatpickr CSS */}
+      {FlatpickrJS}   {/* Include Flatpickr JS */}
       <UserHeader />
       <div className="flex flex-col md:flex-row min-h-screen font-sans">
         {/* Mobile Topbar */}
@@ -567,6 +618,9 @@ export default function ApplicationSubmissionProcess() {
             <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
               <p><strong>Note:</strong> BSc Engg Degree in Mechanical, Industries & Mechatronices holders are eligibile to appear directly in the 2nd Class examination.</p>
             </div>
+            <div className="mb-6 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
+              <p><strong>Note:</strong> Date format must be shown in that format MM/DD/YYYY</p>
+            </div>
 
             <form className="space-y-6">
 
@@ -616,18 +670,16 @@ export default function ApplicationSubmissionProcess() {
                 <input value={formData.presentAddress} onChange={handleChange} id="presentAddress" type="text" className="w-full border border-black rounded-md px-3 py-2" />
               </div>
 
-              {/* Date of Birth (CHANGED TO SINGLE INPUT MM/DD/YYYY) */}
+              {/* Date of Birth (with Flatpickr) */}
               <div>
                 <label htmlFor="dob" className="block mb-1 font-semibold text-gray-700">Date of Birth (MM/DD/YYYY)</label>
                 <input
                   value={formData.dob}
                   onChange={handleChange}
                   id="dob"
-                  type="text"
+                  type="text" // Type text for Flatpickr
                   placeholder="MM/DD/YYYY"
                   className="w-full border border-black rounded-md px-3 py-2"
-                  pattern="(0[1-9]|1[0-2])\/(0[1-9]|[1-2][0-9]|3[0-1])\/\d{4}"
-                  title="Please enter date in MM/DD/YYYY format"
                   required
                 />
               </div>
@@ -635,8 +687,18 @@ export default function ApplicationSubmissionProcess() {
               {/* CNIC */}
               <div>
                 <label htmlFor="idCardNumber" className="block mb-1 font-semibold text-gray-700">Identity Card Number</label>
-                <input value={formData.idCardNumber} onChange={handleChange} id="idCardNumber" type="text" placeholder="35201-0000000-9" className="w-full border border-black rounded-md px-3 py-2" />
-                </div>
+                <input
+                  value={formData.idCardNumber}
+                  onChange={handleChange}
+                  id="idCardNumber"
+                  type="text"
+                  placeholder="35201-0000000-9"
+                  className="w-full border border-black rounded-md px-3 py-2"
+                  pattern="^\d{5}-\d{7}-\d{1}$"
+                  title="CNIC must be in 00000-0000000-0 format"
+                  required
+                />
+              </div>
 
               {/* File Uploads */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -705,11 +767,9 @@ export default function ApplicationSubmissionProcess() {
                   value={formData.degreeDate}
                   onChange={handleChange}
                   id="degreeDate"
-                  type="text"
+                  type="text" // Type text for Flatpickr
                   placeholder="MM/DD/YYYY"
                   className="w-full border border-black rounded-md px-3 py-2"
-                  pattern="(0[1-9]|1[0-2])\/(0[1-9]|[1-2][0-9]|3[0-1])\/\d{4}"
-                  title="Please enter date in MM/DD/YYYY format"
                   required
                 />
             </div>
@@ -753,11 +813,9 @@ export default function ApplicationSubmissionProcess() {
                   value={formData.issueDate}
                   onChange={handleChange}
                   id="issueDate"
-                  type="text"
+                  type="text" // Type text for Flatpickr
                   placeholder="MM/DD/YYYY"
                   className="w-full border border-black rounded-md px-3 py-2"
-                  pattern="(0[1-9]|1[0-2])\/(0[1-9]|[1-2][0-9]|3[0-1])\/\d{4}"
-                  title="Please enter date in MM/DD/YYYY format"
                   required
                 />
             </div>
@@ -798,11 +856,9 @@ export default function ApplicationSubmissionProcess() {
                   value={formData.dateStartService}
                   onChange={handleChange}
                   id="dateStartService"
-                  type="text"
+                  type="text" // Type text for Flatpickr
                   placeholder="MM/DD/YYYY"
                   className="w-full border border-black rounded-md px-3 py-2"
-                  pattern="(0[1-9]|1[0-2])\/(0[1-9]|[1-2][0-9]|3[0-1])\/\d{4}"
-                  title="Please enter date in MM/DD/YYYY format"
                   required
                 />
               </div>
