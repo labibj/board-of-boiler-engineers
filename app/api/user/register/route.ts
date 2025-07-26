@@ -7,10 +7,21 @@ export async function POST(req: NextRequest) {
   try {
     const { name, email, cnic, password } = await req.json();
 
+    // CNIC regex pattern: 5 digits - 7 digits - 1 digit
+    const cnicPattern = /^\d{5}-\d{7}-\d{1}$/;
+
     if (!name || !email || !cnic || !password) {
       return NextResponse.json(
         { message: "All fields are required." },
         { status: 400 }
+      );
+    }
+
+    // Backend CNIC format validation
+    if (!cnicPattern.test(cnic)) {
+      return NextResponse.json(
+        { message: "CNIC must be in 00000-0000000-0 format." },
+        { status: 400 } // Bad Request
       );
     }
 
@@ -42,8 +53,11 @@ export async function POST(req: NextRequest) {
 
     const result = await usersCollection.insertOne(newUser);
 
+    // Ensure _id is converted to string for JWT payload if it's an ObjectId
+    const userIdString = result.insertedId.toHexString();
+
     const token = jwt.sign(
-      { userId: result.insertedId, cnic, email },
+      { _id: userIdString, cnic, email }, // Use _id from MongoDB as userId
       process.env.JWT_SECRET as string,
       { expiresIn: "7d" }
     );

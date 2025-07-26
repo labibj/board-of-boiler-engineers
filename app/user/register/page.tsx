@@ -18,6 +18,9 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false); // Add loading state
   const router = useRouter(); // Initialize useRouter
 
+  // CNIC regex pattern: 5 digits - 7 digits - 1 digit
+  const cnicPattern = /^\d{5}-\d{7}-\d{1}$/;
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -34,6 +37,13 @@ export default function RegisterPage() {
     // Client-side password confirmation validation
     if (form.password !== confirmPassword) {
       setMessage("❌ Passwords do not match.");
+      setLoading(false);
+      return;
+    }
+
+    // Client-side CNIC format validation
+    if (!cnicPattern.test(form.cnic)) {
+      setMessage("❌ CNIC must be in 00000-0000000-0 format.");
       setLoading(false);
       return;
     }
@@ -114,9 +124,11 @@ export default function RegisterPage() {
               <input
                 className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring"
                 name="cnic"
-                placeholder="CNIC"
+                placeholder="00000-0000000-0" // Updated placeholder
                 onChange={handleChange}
                 value={form.cnic}
+                pattern="^\d{5}-\d{7}-\d{1}$" // HTML5 pattern attribute
+                title="CNIC must be in 00000-0000000-0 format" // Tooltip for pattern
                 required
               />
             </div>
@@ -163,7 +175,7 @@ export default function RegisterPage() {
                 {loading ? "REGISTERING..." : "REGISTER"}
               </button>
             </div>
-            {message && <p className="mt-4 text-center text-red-500">{message}</p>} {/* Added styling for message */}
+            {message && <p className={`mt-4 text-center ${message.startsWith('✅') ? 'text-green-600' : 'text-red-500'}`}>{message}</p>} {/* Added styling for message */}
           </form>
         </div>
       </section>
