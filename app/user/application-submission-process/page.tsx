@@ -90,11 +90,7 @@ export default function ApplicationSubmissionProcess() {
       script.src = 'https://cdn.jsdelivr.net/npm/flatpickr';
       script.onload = () => {
         console.log('Flatpickr loaded successfully.');
-        // If the form is already shown, re-initialize date pickers
-        if (showForm && !loadingAuth) {
-          // Call initializeDatePickers here as it now depends on state from this scope
-          // This will be handled by the other useEffect, but good to ensure it's loaded.
-        }
+        // No need to call initializeDatePickers here, the other useEffect handles it
       };
       document.body.appendChild(script); // Append to body or head
 
@@ -168,7 +164,7 @@ export default function ApplicationSubmissionProcess() {
       const element = document.getElementById(id) as HTMLInputElement;
       if (element && typeof window.flatpickr !== 'undefined') {
         // Destroy existing instance to prevent duplicates if component re-renders
-        if ((element as any)._flatpickr) {
+        if ((element as any)._flatpickr) { // Using 'any' here is acceptable for attaching custom properties to DOM elements
           (element as any)._flatpickr.destroy();
         }
         const fp = window.flatpickr(element, {
@@ -183,7 +179,7 @@ export default function ApplicationSubmissionProcess() {
       }
     };
 
-    if (showForm && !loadingAuth && typeof window.flatpickr !== 'undefined') { // Only try to initialize if form is visible, auth check is done, and flatpickr is loaded
+    if (showForm && !loadingAuth && typeof window.flatpickr !== 'undefined') {
       // Initialize based on current step
       if (step === 1) {
         initSingleFlatpickr("dob", formData.dob);
@@ -196,14 +192,12 @@ export default function ApplicationSubmissionProcess() {
     }
   }, [
     step,
-    showForm,
-    loadingAuth,
+    showForm, // Added to dependencies
+    loadingAuth, // Added to dependencies
     formData.dob,
     formData.degreeDate,
     formData.issueDate,
     formData.dateStartService,
-    // No need to include initSingleFlatpickr here as it's defined inside this useEffect
-    // No need to include window.flatpickr as its availability is checked inside the effect
   ]);
 
 
