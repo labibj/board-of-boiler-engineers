@@ -539,8 +539,8 @@ export default function ApplicationSubmissionProcess() {
           </div>
         </div>
             
-        </div>
         <UserFooter />
+        </div>
         </div>
       </>
     );
