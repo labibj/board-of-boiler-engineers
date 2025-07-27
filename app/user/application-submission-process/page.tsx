@@ -644,9 +644,6 @@ export default function ApplicationSubmissionProcess() {
             <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
               <p><strong>Note:</strong> BSc Engg Degree in Mechanical, Industries & Mechatronices holders are eligibile to appear directly in the 2nd Class examination.</p>
             </div>
-            <div className="mb-6 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
-              <p><strong>Note:</strong> Date format must be shown in that format MM/DD/YYYY</p>
-            </div>
 
             <form className="space-y-6">
 
