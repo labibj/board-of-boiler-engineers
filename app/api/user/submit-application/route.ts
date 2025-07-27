@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
-import { createApplication, ApplicationStatus, findApplicationByUserId } from "@/lib/models/application"; // Import findApplicationByUserId
+import { createApplication, ApplicationStatus, findApplicationByUserId } from "@/lib/models/application";
 import jwt from "jsonwebtoken";
 
 // Define JWT payload type
@@ -23,7 +23,6 @@ export async function POST(req: NextRequest) {
 
     let decoded: JwtPayload;
     try {
-      // Verify JWT token and extract user information
       decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
     } catch (jwtError) {
       console.error("Authorization Error: Invalid or expired token.", jwtError);
@@ -31,7 +30,8 @@ export async function POST(req: NextRequest) {
     }
 
     const userId = decoded._id;
-    const userEmail = decoded.email;
+    const userEmail = decoded.email; // Get user's email from JWT
+    const userName = formData.get("fullName") as string; // Get user's full name from form data
 
     // CNIC regex pattern: 5 digits - 7 digits - 1 digit
     const cnicPattern = /^\d{5}-\d{7}-\d{1}$/;
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     // NEW: Check if user has already submitted an application
     const existingApplication = await findApplicationByUserId(userId);
     if (existingApplication) {
-      return NextResponse.json({ error: "You have already submitted an application." }, { status: 409 }); // 409 Conflict
+      return NextResponse.json({ error: "You have already submitted an application." }, { status: 409 });
     }
 
     // Extract all form fields (text + files)
@@ -117,7 +117,14 @@ export async function POST(req: NextRequest) {
 
     const result = await createApplication(applicationData);
 
-    return NextResponse.json({ success: true, id: result.insertedId });
+    // --- EMAIL SENDING PLACEHOLDER ---
+    // In a real application, you would integrate an email sending service here.
+    // Example using a hypothetical internal email utility:
+    // await sendApplicationConfirmationEmail(userEmail, userName, applicationData);
+    console.log(`Email notification would be sent to ${userEmail} for application by ${userName}.`);
+    // --- END EMAIL SENDING PLACEHOLDER ---
+
+    return NextResponse.json({ success: true, id: result.insertedId, message: "Application submitted successfully! A confirmation email has been sent." });
   } catch (err) {
     console.error("Form Submission Error:", err);
     return NextResponse.json({ error: "Failed to submit application", details: (err as Error).message }, { status: 500 });
