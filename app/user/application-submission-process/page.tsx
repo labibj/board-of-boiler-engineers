@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { handleLogout } from "@/app/utils/logout";
 // import UserHeader from "@/app/components/UserHeader";
 import UserFooter from "@/app/components/UserFooter";
 import { FaBell, FaSignOutAlt, FaEllipsisV, FaBars, FaTimes } from "react-icons/fa";
 import Link from "next/link";
 import Image from "next/image";
+import { sidebarLinks } from "@/app/data/sidebarLinks"; // Ensure this is correctly imported
+import { handleLogout } from "@/app/utils/logout"; // Ensure this is correctly imported
+
 
 // Define a minimal interface for Flatpickr instance methods we use
 interface FlatpickrInstance {
@@ -87,11 +89,11 @@ export default function ApplicationSubmissionProcess() {
       const script = document.createElement('script');
       script.src = 'https://cdn.jsdelivr.net/npm/flatpickr';
       script.onload = () => {
-        // Flatpickr is now available globally
         console.log('Flatpickr loaded successfully.');
         // If the form is already shown, re-initialize date pickers
-        if (showForm) {
-          initializeDatePickers();
+        if (showForm && !loadingAuth) {
+          // Call initializeDatePickers here as it now depends on state from this scope
+          // This will be handled by the other useEffect, but good to ensure it's loaded.
         }
       };
       document.body.appendChild(script); // Append to body or head
@@ -159,18 +161,14 @@ export default function ApplicationSubmissionProcess() {
     checkAuthAndApplication();
   }, [router]);
 
-  // Function to initialize Flatpickr instances
-  const initializeDatePickers = () => {
-    if (typeof window.flatpickr === 'undefined') {
-      console.warn("Flatpickr not yet loaded.");
-      return;
-    }
-
+  // Effect to re-initialize date pickers when step or form visibility changes
+  useEffect(() => {
+    // Function to initialize a single flatpickr instance
     const initSingleFlatpickr = (id: string, initialValue: string) => {
       const element = document.getElementById(id) as HTMLInputElement;
-      if (element) {
+      if (element && typeof window.flatpickr !== 'undefined') {
         // Destroy existing instance to prevent duplicates if component re-renders
-        if ((element as any)._flatpickr) { // Using 'any' here is acceptable for attaching custom properties to DOM elements
+        if ((element as any)._flatpickr) {
           (element as any)._flatpickr.destroy();
         }
         const fp = window.flatpickr(element, {
@@ -185,23 +183,28 @@ export default function ApplicationSubmissionProcess() {
       }
     };
 
-    // Initialize based on current step
-    if (step === 1) {
-      initSingleFlatpickr("dob", formData.dob);
-    } else if (step === 2) {
-      initSingleFlatpickr("degreeDate", formData.degreeDate);
-    } else if (step === 3) {
-      initSingleFlatpickr("issueDate", formData.issueDate);
-      initSingleFlatpickr("dateStartService", formData.dateStartService);
+    if (showForm && !loadingAuth && typeof window.flatpickr !== 'undefined') { // Only try to initialize if form is visible, auth check is done, and flatpickr is loaded
+      // Initialize based on current step
+      if (step === 1) {
+        initSingleFlatpickr("dob", formData.dob);
+      } else if (step === 2) {
+        initSingleFlatpickr("degreeDate", formData.degreeDate);
+      } else if (step === 3) {
+        initSingleFlatpickr("issueDate", formData.issueDate);
+        initSingleFlatpickr("dateStartService", formData.dateStartService);
+      }
     }
-  };
-
-  // Effect to re-initialize date pickers when step or form visibility changes
-  useEffect(() => {
-    if (showForm && !loadingAuth) { // Only try to initialize if form is visible and auth check is done
-      initializeDatePickers();
-    }
-  }, [step, showForm, loadingAuth, formData.dob, formData.degreeDate, formData.issueDate, formData.dateStartService]);
+  }, [
+    step,
+    showForm,
+    loadingAuth,
+    formData.dob,
+    formData.degreeDate,
+    formData.issueDate,
+    formData.dateStartService,
+    // No need to include initSingleFlatpickr here as it's defined inside this useEffect
+    // No need to include window.flatpickr as its availability is checked inside the effect
+  ]);
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -485,38 +488,30 @@ export default function ApplicationSubmissionProcess() {
             </div>
             {/* Sidebar Content */}
             <nav className="flex flex-col space-y-4 w-full">
-              {/* Assuming sidebarLinks is defined elsewhere and imported */}
-              {/* Example of a sidebar link, replace with actual sidebarLinks mapping */}
-              {/* This section needs to be dynamic, using sidebarLinks.map */}
-              <Link href="/user/dashboard" className="flex items-center space-x-3 hover:text-gray-300">
-                <Image src="/dashboard-icon.png" alt="Dashboard Icon" width={20} height={20} />
-                <span className="font-semibold tracking-wide">Dashboard</span>
-              </Link>
-              <hr className="border-t border-white w-full" />
-              <Link href="/user/profile" className="flex items-center space-x-3 hover:text-gray-300">
-                <Image src="/profile-icon.png" alt="Profile Icon" width={20} height={20} />
-                <span className="font-semibold tracking-wide">Profile</span>
-              </Link>
-              <hr className="border-t border-white w-full" />
-              <Link href="/user/applications" className="flex items-center space-x-3 hover:text-gray-300">
-                <Image src="/application-icon.png" alt="Applications Icon" width={20} height={20} />
-                <span className="font-semibold tracking-wide">Applications</span>
-              </Link>
-              <hr className="border-t border-white w-full" />
-              <Link href="/user/roll-no-slip" className="flex items-center space-x-3 hover:text-gray-300">
-                <Image src="/logout-icon.png" alt="Roll No Slip Icon" width={20} height={20} />
-                <span className="font-semibold tracking-wide">Roll No Slip</span>
-              </Link>
-              <hr className="border-t border-white w-full" />
-              <Link href="/user/result" className="flex items-center space-x-3 hover:text-gray-300">
-                <Image src="/result-icon.png" alt="Result Icon" width={20} height={20} />
-                <span className="font-semibold tracking-wide">Result</span>
-              </Link>
-              <hr className="border-t border-white w-full" />
-              <button onClick={() => handleLogout("/user/login")} className="flex items-center space-x-3 hover:text-gray-300 w-full text-left cursor-pointer">
-                <FaSignOutAlt className="w-5 h-5" />
-                <span className="font-semibold tracking-wide">Logout</span>
-              </button>
+              {sidebarLinks.map((item, index) =>
+                item.isLogout ? (
+                  <button
+                    key={index}
+                    onClick={() => handleLogout("/user/login")}
+                    className="flex items-center space-x-3 hover:text-gray-300 w-full text-left cursor-pointer"
+                  >
+                    <Image src={item.icon} alt="Logout Icon" width={20} height={20} />
+                    <span className="font-semibold tracking-wide">{item.label}</span>
+                  </button>
+                ) : (
+                  <div className="flex flex-col space-y-4 w-full" key={index}>
+                  <Link
+                    key={index}
+                    href={item.href}
+                    className="flex items-center space-x-3 hover:text-gray-300"
+                  >
+                    <Image src={item.icon} alt={`${item.label} Icon`} width={20} height={20} />
+                    <span className="font-semibold tracking-wide">{item.label}</span>
+                  </Link>
+                    <hr className="border-t border-white w-full" />
+                  </div>
+                )
+              )}
             </nav>
           </aside>
         {/* Main Content */}
@@ -557,7 +552,6 @@ export default function ApplicationSubmissionProcess() {
   // Render the form steps if no existing application and showForm is true
   return (
     <>
-      {/* Flatpickr CSS and JS are now loaded dynamically via useEffect */}
       {/* <UserHeader /> */}
       <div className="flex flex-col md:flex-row min-h-screen font-sans">
         {/* Mobile Topbar */}
@@ -598,37 +592,30 @@ export default function ApplicationSubmissionProcess() {
           </div>
           {/* Sidebar Content */}
           <nav className="flex flex-col space-y-4 w-full">
-            {/* Assuming sidebarLinks is defined elsewhere and imported */}
-            {/* Example of a sidebar link, replace with actual sidebarLinks mapping */}
-            <Link href="/user/dashboard" className="flex items-center space-x-3 hover:text-gray-300">
-              <Image src="/dashboard-icon.png" alt="Dashboard Icon" width={20} height={20} />
-              <span className="font-semibold tracking-wide">Dashboard</span>
-            </Link>
-            <hr className="border-t border-white w-full" />
-            <Link href="/user/profile" className="flex items-center space-x-3 hover:text-gray-300">
-              <Image src="/profile-icon.png" alt="Profile Icon" width={20} height={20} />
-              <span className="font-semibold tracking-wide">Profile</span>
-            </Link>
-            <hr className="border-t border-white w-full" />
-            <Link href="/user/applications" className="flex items-center space-x-3 hover:text-gray-300">
-              <Image src="/application-icon.png" alt="Applications Icon" width={20} height={20} />
-              <span className="font-semibold tracking-wide">Applications</span>
-            </Link>
-            <hr className="border-t border-white w-full" />
-            <Link href="/user/roll-no-slip" className="flex items-center space-x-3 hover:text-gray-300">
-              <Image src="/logout-icon.png" alt="Roll No Slip Icon" width={20} height={20} />
-              <span className="font-semibold tracking-wide">Roll No Slip</span>
-            </Link>
-            <hr className="border-t border-white w-full" />
-            <Link href="/user/result" className="flex items-center space-x-3 hover:text-gray-300">
-              <Image src="/result-icon.png" alt="Result Icon" width={20} height={20} />
-              <span className="font-semibold tracking-wide">Result</span>
-            </Link>
-            <hr className="border-t border-white w-full" />
-            <button onClick={() => handleLogout("/user/login")} className="flex items-center space-x-3 hover:text-gray-300 w-full text-left cursor-pointer">
-              <FaSignOutAlt className="w-5 h-5" />
-              <span className="font-semibold tracking-wide">Logout</span>
-            </button>
+            {sidebarLinks.map((item, index) =>
+              item.isLogout ? (
+                <button
+                  key={index}
+                  onClick={() => handleLogout("/user/login")}
+                  className="flex items-center space-x-3 hover:text-gray-300 w-full text-left cursor-pointer"
+                >
+                  <Image src={item.icon} alt="Logout Icon" width={20} height={20} />
+                  <span className="font-semibold tracking-wide">{item.label}</span>
+                </button>
+              ) : (
+                <div className="flex flex-col space-y-4 w-full" key={index}>
+                <Link
+                  key={index}
+                  href={item.href}
+                  className="flex items-center space-x-3 hover:text-gray-300"
+                >
+                  <Image src={item.icon} alt={`${item.label} Icon`} width={20} height={20} />
+                  <span className="font-semibold tracking-wide">{item.label}</span>
+                </Link>
+                  <hr className="border-t border-white w-full" />
+                </div>
+              )
+            )}
           </nav>
         </aside>
 
