@@ -631,294 +631,293 @@ export default function ApplicationSubmissionProcess() {
 
             {/* Page Content */}
 
-      {step === 1 && (
-        <section className="my-10">
-          <h2 className="text-center font-bold text-[#004432] lg:text-4xl md:text-2xl text-xl">
-            APPLICATION SUBMISSION
-          </h2>
+            {step === 1 && (
+              <section className="my-10">
+                <h2 className="text-center font-bold text-[#004432] lg:text-4xl md:text-2xl text-xl">
+                  APPLICATION SUBMISSION
+                </h2>
 
-          <section className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
-            {/* Notes at the beginning of the form */}
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
-              <p><strong>Note:</strong> BSc Engg Degree in Mechanical, Industries & Mechatronices holders are eligibile to appear directly in the 2nd Class examination.</p>
-            </div>
-            <div className="mb-6 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
-              <p><strong>Note:</strong> Date format must be shown in that format MM/DD/YYYY</p>
-            </div>
+                <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
+                  {/* Notes at the beginning of the form */}
+                  <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
+                    <p><strong>Note:</strong> BSc Engg Degree in Mechanical, Industries & Mechatronices holders are eligibile to appear directly in the 2nd Class examination.</p>
+                  </div>
 
-            <form className="space-y-6">
+                  <form className="space-y-6">
 
-              {/* Certificate Selector */}
-              <div>
-                <label htmlFor="certificate" className="block mb-1 font-semibold text-gray-700">Certificate Now Required</label>
-                <select value={formData.certificate} onChange={handleChange} id="certificate" className="w-full border border-black rounded-md px-3 py-2">
-                  <option value="">Select Option</option>
-                  <option value="1st_class">1st class</option>
-                  <option value="2nd_class">2nd class</option>
-                  <option value="3rd_class">3rd class</option>
-                </select>
-              </div>
+                    {/* Certificate Selector */}
+                    <div>
+                      <label htmlFor="certificate" className="block mb-1 font-semibold text-gray-700">Certificate Now Required</label>
+                      <select value={formData.certificate} onChange={handleChange} id="certificate" className="w-full border border-black rounded-md px-3 py-2">
+                        <option value="">Select Option</option>
+                        <option value="1st_class">1st class</option>
+                        <option value="2nd_class">2nd class</option>
+                        <option value="3rd_class">3rd class</option>
+                      </select>
+                    </div>
 
-              {/* Full Name & Father's Name */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="fullName" className="block mb-1 font-semibold text-gray-700">Name in Full (Block Letters)</label>
-                  <input value={formData.fullName} onChange={handleChange} id="fullName" type="text" className="w-full border border-black rounded-md px-3 py-2" />
+                    {/* Full Name & Father's Name */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="fullName" className="block mb-1 font-semibold text-gray-700">Name in Full (Block Letters)</label>
+                        <input value={formData.fullName} onChange={handleChange} id="fullName" type="text" className="w-full border border-black rounded-md px-3 py-2" />
+                      </div>
+                      <div>
+                        <label htmlFor="fatherName" className="block mb-1 font-semibold text-gray-700">Father Name (Block Letters)</label>
+                        <input value={formData.fatherName} onChange={handleChange} id="fatherName" type="text" className="w-full border border-black rounded-md px-3 py-2" />
+                      </div>
+                    </div>
+
+                    {/* Email & Mobile */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="email" className="block mb-1 font-semibold text-gray-700">Email</label>
+                        <input value={formData.email} onChange={handleChange} id="email" type="email" className="w-full border border-black rounded-md px-3 py-2" />
+                      </div>
+                      <div>
+                        <label htmlFor="mobile" className="block mb-1 font-semibold text-gray-700">Mobile</label>
+                        <input value={formData.mobile} onChange={handleChange} id="mobile" type="tel" className="w-full border border-black rounded-md px-3 py-2" />
+                      </div>
+                    </div>
+
+                    {/* Addresses */}
+                    <div>
+                      <label htmlFor="permanentAddress" className="block mb-1 font-semibold text-gray-700">Permanent Address</label>
+                      <input value={formData.permanentAddress} onChange={handleChange} id="permanentAddress" type="text" className="w-full border border-black rounded-md px-3 py-2" />
+                    </div>
+
+                    <div>
+                      <label htmlFor="presentAddress" className="block mb-1 font-semibold text-gray-700">Present Address</label>
+                      <input value={formData.presentAddress} onChange={handleChange} id="presentAddress" type="text" className="w-full border border-black rounded-md px-3 py-2" />
+                    </div>
+
+                    {/* Date of Birth (with Flatpickr) */}
+                    <div>
+                      <label htmlFor="dob" className="block mb-1 font-semibold text-gray-700">Date of Birth (MM/DD/YYYY)</label>
+                      <input
+                        value={formData.dob}
+                        onChange={handleChange}
+                        id="dob"
+                        type="text" // Type text for Flatpickr
+                        placeholder="MM/DD/YYYY"
+                        className="w-full border border-black rounded-md px-3 py-2"
+                        required
+                      />
+                    </div>
+
+                    {/* CNIC */}
+                    <div>
+                      <label htmlFor="idCardNumber" className="block mb-1 font-semibold text-gray-700">Identity Card Number</label>
+                      <input
+                        value={formData.idCardNumber}
+                        onChange={handleChange}
+                        id="idCardNumber"
+                        type="text"
+                        placeholder="35201-0000000-9"
+                        className="w-full border border-black rounded-md px-3 py-2"
+                        pattern="^\d{5}-\d{7}-\d{1}$"
+                        title="CNIC must be in 00000-0000000-0 format"
+                        required
+                      />
+                    </div>
+
+                    {/* File Uploads */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block mb-1 font-semibold text-gray-700">Upload Front Side ID Card</label>
+                        <input id="frontIdCard" onChange={handleFileChange} type="file" accept="image/*,application/pdf" className="w-full border border-black rounded-md px-3 py-2" />
+                      </div>
+                      <div>
+                        <label className="block mb-1 font-semibold text-gray-700">Upload Back Side ID Card</label>
+                        <input id="backIdCard" onChange={handleFileChange} type="file" accept="image/*,application/pdf" className="w-full border border-black rounded-md px-3 py-2" />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block mb-1 font-semibold text-gray-700">Upload Profile Photo</label>
+                      <input id="profilePhoto" onChange={handleFileChange} type="file" accept="image/*" className="w-full border border-black rounded-md px-3 py-2" />
+                    </div>
+
+                    <div>
+                      <label className="block mb-1 font-semibold text-gray-700">Fee Deposite / Money Order / Cash Slip (Enclose Original)</label>
+                      <input id="feeSlip" onChange={handleFileChange} type="file" accept="image/*,application/pdf" className="w-full border border-black rounded-md px-3 py-2" />
+                    </div>
+
+                    {/* NEXT Button */}
+                    <div className="flex justify-center items-center gap-1">
+                      <span className="bg-black text-white rounded-l-md py-3 px-4 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                      </span>
+                      <button type="button" onClick={handleNextStep} className="cursor-pointer bg-[#004432] text-white px-8 py-3 rounded-r-md font-semibold hover:bg-[#003522] transition">
+                        NEXT
+                      </button>
+                    </div>
+                  </form>
                 </div>
-                <div>
-                  <label htmlFor="fatherName" className="block mb-1 font-semibold text-gray-700">Father Name (Block Letters)</label>
-                  <input value={formData.fatherName} onChange={handleChange} id="fatherName" type="text" className="w-full border border-black rounded-md px-3 py-2" />
+              </section>
+            )}
+
+            {step === 2 && (
+              <div className="max-w-4xl mx-auto my-10 p-6 bg-white rounded-lg shadow-md">
+                <h2 className="text-center font-bold text-[#004432] lg:text-4xl md:text-2xl text-xl mb-5">
+                  APPLICATION SUBMISSION
+                </h2>
+                <h3 className="text-xl font-bold mb-4 text-center font-open-sans">ACADEMIC / TECHNICAL QUALIFICATION</h3>
+                <h6 className="text-[#258c71] font-poppins text-base text-center font-semibold">
+                  (Attached Attested Copies of Certificates)
+                </h6>
+                  <div className="space-y-4">
+                              <div>
+                    <label htmlFor="certificateDiploma" className="block mb-1 font-semibold text-gray-700">Certificate. Diploma or Degree</label>
+                    <select value={formData.certificateDiploma} onChange={handleChange} id="certificateDiploma" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]">
+                      <option value="">Select Option</option>
+                      <option value="1st_class">1st class</option>
+                      <option value="2nd_class">2nd class</option>
+                      <option value="3rd_class">3rd class</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="departmentName" className="block mb-1 font-semibold text-gray-700">Name of School. Institute. University</label>
+                    <input value={formData.departmentName} onChange={handleChange} type="text" id="departmentName" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
+                  </div>
+                  <div>
+                    <label className="block mb-1 font-semibold text-gray-700">Date of Obtaining the Certificate. Diploma / Degree (MM/DD/YYYY)</label>
+                    <input
+                        value={formData.degreeDate}
+                        onChange={handleChange}
+                        id="degreeDate"
+                        type="text" // Type text for Flatpickr
+                        placeholder="MM/DD/YYYY"
+                        className="w-full border border-black rounded-md px-3 py-2"
+                        required
+                      />
+                  </div>
+                              <div>
+                  <label className="block mb-1 font-semibold text-gray-700">Upload Certificate. Diploma / Degree</label>
+                              <div className="flex flex-col md:flex-row">
+                                <input id="certificateDiplomaFile" onChange={handleFileChange} type="file" className="flex-grow border border-black rounded-l-md px-3 py-2 focus:outline-none mb-2 md:mb-0" accept="image/*,application/pdf" />
+                                <button type="button" className="bg-[#004432] px-4 py-2 rounded-r-md border text-white cursor-pointer md:ml-2">Browse</button>
+                              </div>
+                  </div>
+                  <div className="flex justify-between">
+                    <button onClick={prevStep} type="button" className="bg-gray-600 text-white px-6 py-2 rounded cursor-pointer">Back</button>
+                    <div className="flex justify-center items-center gap-1">
+                      <span className="bg-black text-white rounded-l-md py-3 px-4 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                      </span>
+                      <button type="button" onClick={handleNextStep} className="cursor-pointer bg-[#004432] text-white px-8 py-3 rounded-r-md font-semibold hover:bg-[#003522] transition">
+                        NEXT
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
+            )}
 
-              {/* Email & Mobile */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="email" className="block mb-1 font-semibold text-gray-700">Email</label>
-                  <input value={formData.email} onChange={handleChange} id="email" type="email" className="w-full border border-black rounded-md px-3 py-2" />
+            {step === 3 && (
+              <div className="max-w-4xl mx-auto my-10 p-6 bg-white rounded-lg shadow-md">
+                              <h2 className="text-center font-bold text-[#004432] lg:text-4xl md:text-2xl text-xl mb-5">
+                  FINAL SUBMISSION
+                </h2>
+                              <h3 className="text-xl font-bold mb-4 text-center font-open-sans">SERVICE LETTER</h3>
+                <h6 className="text-[#258c71] font-poppins text-base text-center font-semibold">
+                  Name and desigination who signed the Service Letter (Manager/Owner)
+                </h6>
+                <div className="space-y-4">
+                              <div>
+                    <label className="block mb-1 font-semibold text-gray-700">Issue Date (MM/DD/YYYY)</label>
+                    <input
+                        value={formData.issueDate}
+                        onChange={handleChange}
+                        id="issueDate"
+                        type="text" // Type text for Flatpickr
+                        placeholder="MM/DD/YYYY"
+                        className="w-full border border-black rounded-md px-3 py-2"
+                        required
+                      />
+                  </div>
+                  <div>
+                    <label htmlFor="biolerRegistryNo" className="block mb-1 font-semibold text-gray-700">Boiler Registry/Maker No.</label>
+                    <input value={formData.biolerRegistryNo} onChange={handleChange} type="text" id="biolerRegistryNo" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="heatingSurface" className="block mb-1 font-semibold text-gray-700">Heating Surface or Capacity</label>
+                      <input value={formData.heatingSurface} onChange={handleChange} type="text" id="heatingSurface" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
+                    </div>
+                    <div>
+                      <label htmlFor="workingPressure" className="block mb-1 font-semibold text-gray-700">Working Pressure</label>
+                      <input value={formData.workingPressure} onChange={handleChange} type="text" id="workingPressure" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
+                    </div>
+                  </div>
+                              <div>
+                    <label htmlFor="biolerRegistryNo" className="block mb-1 font-semibold text-gray-700">Boiler Registry/Maker No.</label>
+                    <input value={formData.biolerRegistryNo} onChange={handleChange} type="text" id="biolerRegistryNo" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
+                  </div>
+                                  <div>
+                    <label htmlFor="factoryNameAddress" className="block mb-1 font-semibold text-gray-700">Name and Address of Factory</label>
+                    <input value={formData.factoryNameAddress} onChange={handleChange} type="text" id="factoryNameAddress" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
+                  </div>
+                    <div>
+                    <label htmlFor="candidateDesignation" className="block mb-1 font-semibold text-gray-700">Designation of the Candidate</label>
+                    <input value={formData.candidateDesignation} onChange={handleChange} type="text" id="candidateDesignation" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
+                  </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="actualTime" className="block mb-1 font-semibold text-gray-700">Actual Time Served on Bioler</label>
+                      <input value={formData.actualTime} onChange={handleChange} type="text" id="actualTime" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
+                    </div>
+                    <div>
+                      <label htmlFor="dateStartService" className="block mb-1 font-semibold text-gray-700">Date Start of Service (MM/DD/YYYY)</label>
+                      <input
+                        value={formData.dateStartService}
+                        onChange={handleChange}
+                        id="dateStartService"
+                        type="text" // Type text for Flatpickr
+                        placeholder="MM/DD/YYYY"
+                        className="w-full border border-black rounded-md px-3 py-2"
+                        required
+                      />
+                    </div>
+                  </div>
+                                  <div>
+                    <label className="block mb-1 font-semibold text-gray-700">Upload Service Letter</label>
+                    <div className="flex flex-col md:flex-row">
+                      <input id="serviceLetter" onChange={handleFileChange} type="file" className="flex-grow border border-black rounded-l-md px-3 py-2 focus:outline-none mb-2 md:mb-0" accept="image/*,application/pdf" />
+                      <button type="button" className="bg-[#004432] px-4 py-2 rounded-r-md border text-white cursor-pointer md:ml-2">Browse</button>
+                    </div>
+                  </div>
+                  <div className="flex justify-between">
+                    <button onClick={prevStep} type="button" className="bg-gray-600 text-white px-6 py-2 rounded cursor-pointer">Back</button>
+                                  <div className="flex justify-center items-center gap-1">
+                      <span className="bg-black text-white rounded-l-md py-3 px-4 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleSubmit}
+                        disabled={submitting}
+                        className={`cursor-pointer px-8 py-3 rounded-r-md font-semibold transition ${
+                          submitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#004432] text-white hover:bg-[#003522]'
+                        }`}
+                      >
+                        {submitting ? "Submitting..." : "SUBMIT"}
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label htmlFor="mobile" className="block mb-1 font-semibold text-gray-700">Mobile</label>
-                  <input value={formData.mobile} onChange={handleChange} id="mobile" type="tel" className="w-full border border-black rounded-md px-3 py-2" />
-                </div>
               </div>
-
-              {/* Addresses */}
-              <div>
-                <label htmlFor="permanentAddress" className="block mb-1 font-semibold text-gray-700">Permanent Address</label>
-                <input value={formData.permanentAddress} onChange={handleChange} id="permanentAddress" type="text" className="w-full border border-black rounded-md px-3 py-2" />
-              </div>
-
-              <div>
-                <label htmlFor="presentAddress" className="block mb-1 font-semibold text-gray-700">Present Address</label>
-                <input value={formData.presentAddress} onChange={handleChange} id="presentAddress" type="text" className="w-full border border-black rounded-md px-3 py-2" />
-              </div>
-
-              {/* Date of Birth (with Flatpickr) */}
-              <div>
-                <label htmlFor="dob" className="block mb-1 font-semibold text-gray-700">Date of Birth (MM/DD/YYYY)</label>
-                <input
-                  value={formData.dob}
-                  onChange={handleChange}
-                  id="dob"
-                  type="text" // Type text for Flatpickr
-                  placeholder="MM/DD/YYYY"
-                  className="w-full border border-black rounded-md px-3 py-2"
-                  required
-                />
-              </div>
-
-              {/* CNIC */}
-              <div>
-                <label htmlFor="idCardNumber" className="block mb-1 font-semibold text-gray-700">Identity Card Number</label>
-                <input
-                  value={formData.idCardNumber}
-                  onChange={handleChange}
-                  id="idCardNumber"
-                  type="text"
-                  placeholder="35201-0000000-9"
-                  className="w-full border border-black rounded-md px-3 py-2"
-                  pattern="^\d{5}-\d{7}-\d{1}$"
-                  title="CNIC must be in 00000-0000000-0 format"
-                  required
-                />
-              </div>
-
-              {/* File Uploads */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block mb-1 font-semibold text-gray-700">Upload Front Side ID Card</label>
-                  <input id="frontIdCard" onChange={handleFileChange} type="file" accept="image/*,application/pdf" className="w-full border border-black rounded-md px-3 py-2" />
-                </div>
-                <div>
-                  <label className="block mb-1 font-semibold text-gray-700">Upload Back Side ID Card</label>
-                  <input id="backIdCard" onChange={handleFileChange} type="file" accept="image/*,application/pdf" className="w-full border border-black rounded-md px-3 py-2" />
-                </div>
-              </div>
-
-              <div>
-                <label className="block mb-1 font-semibold text-gray-700">Upload Profile Photo</label>
-                <input id="profilePhoto" onChange={handleFileChange} type="file" accept="image/*" className="w-full border border-black rounded-md px-3 py-2" />
-              </div>
-
-              <div>
-                <label className="block mb-1 font-semibold text-gray-700">Fee Deposite / Money Order / Cash Slip (Enclose Original)</label>
-                <input id="feeSlip" onChange={handleFileChange} type="file" accept="image/*,application/pdf" className="w-full border border-black rounded-md px-3 py-2" />
-              </div>
-
-              {/* NEXT Button */}
-              <div className="flex justify-center items-center gap-1">
-                <span className="bg-black text-white rounded-l-md py-3 px-4 flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                  </svg>
-                </span>
-                <button type="button" onClick={handleNextStep} className="cursor-pointer bg-[#004432] text-white px-8 py-3 rounded-r-md font-semibold hover:bg-[#003522] transition">
-                  NEXT
-                </button>
-              </div>
-            </form>
-          </section>
-        </section>
-      )}
-
-      {step === 2 && (
-        <section className="max-w-4xl mx-auto my-10 p-6 bg-white rounded-lg shadow-md">
-          <h2 className="text-center font-bold text-[#004432] lg:text-4xl md:text-2xl text-xl mb-5">
-            APPLICATION SUBMISSION
-          </h2>
-          <h3 className="text-xl font-bold mb-4 text-center font-open-sans">ACADEMIC / TECHNICAL QUALIFICATION</h3>
-          <h6 className="text-[#258c71] font-poppins text-base text-center font-semibold">
-            (Attached Attested Copies of Certificates)
-          </h6>
-            <div className="space-y-4">
-                        <div>
-              <label htmlFor="certificateDiploma" className="block mb-1 font-semibold text-gray-700">Certificate. Diploma or Degree</label>
-              <select value={formData.certificateDiploma} onChange={handleChange} id="certificateDiploma" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]">
-                <option value="">Select Option</option>
-                <option value="1st_class">1st class</option>
-                <option value="2nd_class">2nd class</option>
-                <option value="3rd_class">3rd class</option>
-              </select>
-            </div>
-            <div>
-              <label htmlFor="departmentName" className="block mb-1 font-semibold text-gray-700">Name of School. Institute. University</label>
-              <input value={formData.departmentName} onChange={handleChange} type="text" id="departmentName" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
-            </div>
-            <div>
-              <label className="block mb-1 font-semibold text-gray-700">Date of Obtaining the Certificate. Diploma / Degree (MM/DD/YYYY)</label>
-              <input
-                  value={formData.degreeDate}
-                  onChange={handleChange}
-                  id="degreeDate"
-                  type="text" // Type text for Flatpickr
-                  placeholder="MM/DD/YYYY"
-                  className="w-full border border-black rounded-md px-3 py-2"
-                  required
-                />
-            </div>
-                        <div>
-            <label className="block mb-1 font-semibold text-gray-700">Upload Certificate. Diploma / Degree</label>
-                        <div className="flex flex-col md:flex-row">
-                          <input id="certificateDiplomaFile" onChange={handleFileChange} type="file" className="flex-grow border border-black rounded-l-md px-3 py-2 focus:outline-none mb-2 md:mb-0" accept="image/*,application/pdf" />
-                          <button type="button" className="bg-[#004432] px-4 py-2 rounded-r-md border text-white cursor-pointer md:ml-2">Browse</button>
-                        </div>
-            </div>
-            <div className="flex justify-between">
-              <button onClick={prevStep} type="button" className="bg-gray-600 text-white px-6 py-2 rounded cursor-pointer">Back</button>
-              <div className="flex justify-center items-center gap-1">
-                <span className="bg-black text-white rounded-l-md py-3 px-4 flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                  </svg>
-                </span>
-                <button type="button" onClick={handleNextStep} className="cursor-pointer bg-[#004432] text-white px-8 py-3 rounded-r-md font-semibold hover:bg-[#003522] transition">
-                  NEXT
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {step === 3 && (
-        <section className="max-w-4xl mx-auto my-10 p-6 bg-white rounded-lg shadow-md">
-                        <h2 className="text-center font-bold text-[#004432] lg:text-4xl md:text-2xl text-xl mb-5">
-            FINAL SUBMISSION
-          </h2>
-                        <h3 className="text-xl font-bold mb-4 text-center font-open-sans">SERVICE LETTER</h3>
-          <h6 className="text-[#258c71] font-poppins text-base text-center font-semibold">
-            Name and desigination who signed the Service Letter (Manager/Owner)
-          </h6>
-          <div className="space-y-4">
-                        <div>
-              <label className="block mb-1 font-semibold text-gray-700">Issue Date (MM/DD/YYYY)</label>
-              <input
-                  value={formData.issueDate}
-                  onChange={handleChange}
-                  id="issueDate"
-                  type="text" // Type text for Flatpickr
-                  placeholder="MM/DD/YYYY"
-                  className="w-full border border-black rounded-md px-3 py-2"
-                  required
-                />
-            </div>
-            <div>
-              <label htmlFor="biolerRegistryNo" className="block mb-1 font-semibold text-gray-700">Boiler Registry/Maker No.</label>
-              <input value={formData.biolerRegistryNo} onChange={handleChange} type="text" id="biolerRegistryNo" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="heatingSurface" className="block mb-1 font-semibold text-gray-700">Heating Surface or Capacity</label>
-                <input value={formData.heatingSurface} onChange={handleChange} type="text" id="heatingSurface" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
-              </div>
-              <div>
-                <label htmlFor="workingPressure" className="block mb-1 font-semibold text-gray-700">Working Pressure</label>
-                <input value={formData.workingPressure} onChange={handleChange} type="text" id="workingPressure" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
-              </div>
-            </div>
-                        <div>
-              <label htmlFor="biolerRegistryNo" className="block mb-1 font-semibold text-gray-700">Boiler Registry/Maker No.</label>
-              <input value={formData.biolerRegistryNo} onChange={handleChange} type="text" id="biolerRegistryNo" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
-            </div>
-                            <div>
-              <label htmlFor="factoryNameAddress" className="block mb-1 font-semibold text-gray-700">Name and Address of Factory</label>
-              <input value={formData.factoryNameAddress} onChange={handleChange} type="text" id="factoryNameAddress" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
-            </div>
-              <div>
-              <label htmlFor="candidateDesignation" className="block mb-1 font-semibold text-gray-700">Designation of the Candidate</label>
-              <input value={formData.candidateDesignation} onChange={handleChange} type="text" id="candidateDesignation" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
-            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="actualTime" className="block mb-1 font-semibold text-gray-700">Actual Time Served on Bioler</label>
-                <input value={formData.actualTime} onChange={handleChange} type="text" id="actualTime" className="w-full border border-black rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#004432]" />
-              </div>
-              <div>
-                <label htmlFor="dateStartService" className="block mb-1 font-semibold text-gray-700">Date Start of Service (MM/DD/YYYY)</label>
-                <input
-                  value={formData.dateStartService}
-                  onChange={handleChange}
-                  id="dateStartService"
-                  type="text" // Type text for Flatpickr
-                  placeholder="MM/DD/YYYY"
-                  className="w-full border border-black rounded-md px-3 py-2"
-                  required
-                />
-              </div>
-            </div>
-                            <div>
-              <label className="block mb-1 font-semibold text-gray-700">Upload Service Letter</label>
-              <div className="flex flex-col md:flex-row">
-                <input id="serviceLetter" onChange={handleFileChange} type="file" className="flex-grow border border-black rounded-l-md px-3 py-2 focus:outline-none mb-2 md:mb-0" accept="image/*,application/pdf" />
-                <button type="button" className="bg-[#004432] px-4 py-2 rounded-r-md border text-white cursor-pointer md:ml-2">Browse</button>
-              </div>
-            </div>
-            <div className="flex justify-between">
-              <button onClick={prevStep} type="button" className="bg-gray-600 text-white px-6 py-2 rounded cursor-pointer">Back</button>
-                            <div className="flex justify-center items-center gap-1">
-                <span className="bg-black text-white rounded-l-md py-3 px-4 flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                  </svg>
-                </span>
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  disabled={submitting}
-                  className={`cursor-pointer px-8 py-3 rounded-r-md font-semibold transition ${
-                    submitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#004432] text-white hover:bg-[#003522]'
-                  }`}
-                >
-                  {submitting ? "Submitting..." : "SUBMIT"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
+            )}
 
             </div>
+
+            <UserFooter />
             
         </div>
 
@@ -926,7 +925,6 @@ export default function ApplicationSubmissionProcess() {
       </div>
 
 
-      <UserFooter />
     </>
   );
 }
