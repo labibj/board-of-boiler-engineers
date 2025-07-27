@@ -3,27 +3,25 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { handleLogout } from "@/app/utils/logout";
-import UserHeader from "@/app/components/UserHeader";
+// import UserHeader from "@/app/components/UserHeader";
 import UserFooter from "@/app/components/UserFooter";
 import { FaBell, FaSignOutAlt, FaEllipsisV, FaBars, FaTimes } from "react-icons/fa";
 import Link from "next/link";
 import Image from "next/image";
 
-// Flatpickr CSS and JS via CDN
-const FlatpickrCSS = (
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
-  />
-);
-const FlatpickrJS = (
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-);
+// Define a minimal interface for Flatpickr instance methods we use
+interface FlatpickrInstance {
+  destroy: () => void;
+  // Add other methods if you use them, e.g., open, close, setDate
+}
 
 // Declare global Flatpickr for TypeScript
 declare global {
   interface Window {
-    flatpickr: any; // Using 'any' for simplicity, or you can import Flatpickr types if available
+    flatpickr: (
+      element: HTMLElement | string,
+      options?: object
+    ) => FlatpickrInstance;
   }
 }
 
@@ -75,6 +73,38 @@ export default function ApplicationSubmissionProcess() {
   const cnicPattern = /^\d{5}-\d{7}-\d{1}$/;
   // Date format regex for MM/DD/YYYY
   const dateFormatRegex = /^(0[1-9]|1[0-2])\/(0[1-9]|[1-2][0-9]|3[0-1])\/\d{4}$/;
+
+  // Effect to load Flatpickr CSS and JS dynamically
+  useEffect(() => {
+    const loadFlatpickr = () => {
+      // Load CSS
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css';
+      document.head.appendChild(link);
+
+      // Load JS
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/flatpickr';
+      script.onload = () => {
+        // Flatpickr is now available globally
+        console.log('Flatpickr loaded successfully.');
+        // If the form is already shown, re-initialize date pickers
+        if (showForm) {
+          initializeDatePickers();
+        }
+      };
+      document.body.appendChild(script); // Append to body or head
+
+      return () => {
+        // Cleanup: remove the added elements when component unmounts
+        document.head.removeChild(link);
+        document.body.removeChild(script);
+      };
+    };
+
+    loadFlatpickr();
+  }, []); // Run once on component mount
 
   // Authentication check and existing application check on component mount
   useEffect(() => {
@@ -129,40 +159,50 @@ export default function ApplicationSubmissionProcess() {
     checkAuthAndApplication();
   }, [router]);
 
-  // Initialize Flatpickr for date fields
-  useEffect(() => {
-    if (showForm) { // Only initialize if the form is visible
-      // Function to initialize a single flatpickr instance
-      const initFlatpickr = (id: string, initialValue: string) => {
-        const element = document.getElementById(id) as HTMLInputElement;
-        if (element && typeof window.flatpickr !== 'undefined') {
-          // Destroy existing instance to prevent duplicates if component re-renders
-          if ((element as any)._flatpickr) {
-            (element as any)._flatpickr.destroy();
-          }
-          const fp = window.flatpickr(element, {
-            dateFormat: "m/d/Y", // MM/DD/YYYY format
-            defaultDate: initialValue,
-            onChange: (selectedDates: Date[], dateStr: string) => { // Added types for onChange parameters
-              setFormData((prev) => ({ ...prev, [id]: dateStr }));
-            },
-          });
-          // Store the instance on the element for later destruction
-          (element as any)._flatpickr = fp;
-        }
-      };
-
-      // Initialize based on current step
-      if (step === 1) {
-        initFlatpickr("dob", formData.dob);
-      } else if (step === 2) {
-        initFlatpickr("degreeDate", formData.degreeDate);
-      } else if (step === 3) {
-        initFlatpickr("issueDate", formData.issueDate);
-        initFlatpickr("dateStartService", formData.dateStartService);
-      }
+  // Function to initialize Flatpickr instances
+  const initializeDatePickers = () => {
+    if (typeof window.flatpickr === 'undefined') {
+      console.warn("Flatpickr not yet loaded.");
+      return;
     }
-  }, [step, showForm, formData.dob, formData.degreeDate, formData.issueDate, formData.dateStartService]); // Re-run when step or form visibility changes, or initial values change
+
+    const initSingleFlatpickr = (id: string, initialValue: string) => {
+      const element = document.getElementById(id) as HTMLInputElement;
+      if (element) {
+        // Destroy existing instance to prevent duplicates if component re-renders
+        if ((element as any)._flatpickr) { // Using 'any' here is acceptable for attaching custom properties to DOM elements
+          (element as any)._flatpickr.destroy();
+        }
+        const fp = window.flatpickr(element, {
+          dateFormat: "m/d/Y", // MM/DD/YYYY format
+          defaultDate: initialValue,
+          onChange: (selectedDates: Date[], dateStr: string) => {
+            setFormData((prev) => ({ ...prev, [id]: dateStr }));
+          },
+        });
+        // Store the instance on the element for later destruction
+        (element as any)._flatpickr = fp;
+      }
+    };
+
+    // Initialize based on current step
+    if (step === 1) {
+      initSingleFlatpickr("dob", formData.dob);
+    } else if (step === 2) {
+      initSingleFlatpickr("degreeDate", formData.degreeDate);
+    } else if (step === 3) {
+      initSingleFlatpickr("issueDate", formData.issueDate);
+      initSingleFlatpickr("dateStartService", formData.dateStartService);
+    }
+  };
+
+  // Effect to re-initialize date pickers when step or form visibility changes
+  useEffect(() => {
+    if (showForm && !loadingAuth) { // Only try to initialize if form is visible and auth check is done
+      initializeDatePickers();
+    }
+  }, [step, showForm, loadingAuth, formData.dob, formData.degreeDate, formData.issueDate, formData.dateStartService]);
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { id, value } = e.target;
@@ -383,7 +423,7 @@ export default function ApplicationSubmissionProcess() {
 
     return (
       <>
-        <UserHeader />
+        {/* <UserHeader /> */}
         <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
           <div className="bg-white p-8 rounded-lg shadow-md text-center">
             <h2 className="text-2xl font-bold text-[#004432] mb-4">Application Already Submitted</h2>
@@ -405,7 +445,7 @@ export default function ApplicationSubmissionProcess() {
   if (!hasExistingApplication && !showForm) {
     return (
       <>
-        <UserHeader />
+        {/* <UserHeader /> */}
         <div className="flex flex-col md:flex-row min-h-screen font-sans">
           {/* Mobile Topbar */}
           <div className="md:hidden flex justify-between items-center bg-[#004432] text-white p-4">
@@ -447,6 +487,7 @@ export default function ApplicationSubmissionProcess() {
             <nav className="flex flex-col space-y-4 w-full">
               {/* Assuming sidebarLinks is defined elsewhere and imported */}
               {/* Example of a sidebar link, replace with actual sidebarLinks mapping */}
+              {/* This section needs to be dynamic, using sidebarLinks.map */}
               <Link href="/user/dashboard" className="flex items-center space-x-3 hover:text-gray-300">
                 <Image src="/dashboard-icon.png" alt="Dashboard Icon" width={20} height={20} />
                 <span className="font-semibold tracking-wide">Dashboard</span>
@@ -516,9 +557,8 @@ export default function ApplicationSubmissionProcess() {
   // Render the form steps if no existing application and showForm is true
   return (
     <>
-      {FlatpickrCSS} {/* Include Flatpickr CSS */}
-      {FlatpickrJS}   {/* Include Flatpickr JS */}
-      <UserHeader />
+      {/* Flatpickr CSS and JS are now loaded dynamically via useEffect */}
+      {/* <UserHeader /> */}
       <div className="flex flex-col md:flex-row min-h-screen font-sans">
         {/* Mobile Topbar */}
         <div className="md:hidden flex justify-between items-center bg-[#004432] text-white p-4">
