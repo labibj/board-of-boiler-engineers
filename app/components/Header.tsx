@@ -162,7 +162,7 @@ export default function Header() {
                   Members of Board
                 </Link>
               </li>
-              <li className="h-full flex items-center">
+              {/* <li className="h-full flex items-center">
                 <Link
                   href="/eligibility-criteria"
                   className={`text-white h-full flex items-center px-6 font-medium font-open-sans transition ${
@@ -171,7 +171,7 @@ export default function Header() {
                 >
                   Eligibility Criteria
                 </Link>
-              </li>
+              </li> */}
               <li className="h-full flex items-center">
                 <Link
                   href="/results"
@@ -202,7 +202,7 @@ export default function Header() {
                   Gallery
                 </Link>
               </li>
-              <li className="h-full flex items-center">
+              {/* <li className="h-full flex items-center">
                 <Link
                   href="/venue-datesheet"
                   className={`text-white h-full flex items-center px-6 font-medium font-open-sans transition ${
@@ -211,7 +211,7 @@ export default function Header() {
                 >
                   Venue / Datesheet
                 </Link>
-              </li>
+              </li> */}
             </ul>
 
             {/* Mobile menu button (hamburger icon) */}
