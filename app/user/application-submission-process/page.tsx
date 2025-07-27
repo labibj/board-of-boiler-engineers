@@ -163,9 +163,12 @@ export default function ApplicationSubmissionProcess() {
     const initSingleFlatpickr = (id: string, initialValue: string) => {
       const element = document.getElementById(id) as HTMLInputElement;
       if (element && typeof window.flatpickr !== 'undefined') {
+        // Use type assertion to tell TypeScript that `_flatpickr` might exist
+        const fpElement = element as HTMLElement & { _flatpickr?: FlatpickrInstance };
+
         // Destroy existing instance to prevent duplicates if component re-renders
-        if ((element as any)._flatpickr) { // Using 'any' here is acceptable for attaching custom properties to DOM elements
-          (element as any)._flatpickr.destroy();
+        if (fpElement._flatpickr) {
+          fpElement._flatpickr.destroy();
         }
         const fp = window.flatpickr(element, {
           dateFormat: "m/d/Y", // MM/DD/YYYY format
@@ -175,7 +178,7 @@ export default function ApplicationSubmissionProcess() {
           },
         });
         // Store the instance on the element for later destruction
-        (element as any)._flatpickr = fp;
+        fpElement._flatpickr = fp;
       }
     };
 
@@ -192,8 +195,8 @@ export default function ApplicationSubmissionProcess() {
     }
   }, [
     step,
-    showForm, // Added to dependencies
-    loadingAuth, // Added to dependencies
+    showForm,
+    loadingAuth,
     formData.dob,
     formData.degreeDate,
     formData.issueDate,
