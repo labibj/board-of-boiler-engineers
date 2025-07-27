@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react"; // React hook for managing component state
+import { useState, useEffect } from "react"; // React hook for managing component state
 import Image from "next/image"; // Next.js optimized Image component
 import Link from "next/link"; // Next.js Link component for client-side navigation
 import { FaGlobe, FaBars, FaTimes } from "react-icons/fa"; // FontAwesome icons for UI
@@ -12,6 +12,29 @@ export default function Header() {
 
   // State to control mobile offcanvas menu visibility
   const [offcanvasOpen, setOffcanvasOpen] = useState(false);
+
+  // State to track user login status
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Check login status on component mount
+  useEffect(() => {
+    // Check if a token exists in localStorage
+    const token = localStorage.getItem("token");
+    setIsLoggedIn(!!token); // Set isLoggedIn to true if token exists, false otherwise
+
+    // You might also want to add an event listener here
+    // to react to changes in localStorage (e.g., logout from another tab)
+    const handleStorageChange = () => {
+      const updatedToken = localStorage.getItem("token");
+      setIsLoggedIn(!!updatedToken);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []); // Empty dependency array means this effect runs once on mount
 
   return (
     <>
@@ -71,20 +94,31 @@ export default function Header() {
               </select>
             </div>
 
-            {/* Registration/Login button - visible only on large screens */}
+            {/* Registration/Login or Go To Dashboard button - visible only on large screens */}
             <div className="flex gap-5 justify-center lg:justify-end">
-              <a
-                href="/user/register"
-                className="hidden lg:inline-block bg-[#004432] text-white px-4 py-3 rounded-tl-lg rounded-br-lg hover:bg-[#03614d] font-medium whitespace-nowrap transition text-sm sm:text-base"
-              >
-                Registration
-              </a>
-              <a
-                href="/user/login"
-                className="hidden lg:inline-block bg-[#004432] text-white px-4 py-3 rounded-tl-lg rounded-br-lg hover:bg-[#03614d] font-medium whitespace-nowrap transition text-sm sm:text-base"
-              >
-                Login
-              </a>
+              {isLoggedIn ? (
+                <Link
+                  href="/user/dashboard"
+                  className="hidden lg:inline-block bg-[#004432] text-white px-4 py-3 rounded-tl-lg rounded-br-lg hover:bg-[#03614d] font-medium whitespace-nowrap transition text-sm sm:text-base"
+                >
+                  Go To Dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/user/register"
+                    className="hidden lg:inline-block bg-[#004432] text-white px-4 py-3 rounded-tl-lg rounded-br-lg hover:bg-[#03614d] font-medium whitespace-nowrap transition text-sm sm:text-base"
+                  >
+                    Registration
+                  </Link>
+                  <Link
+                    href="/user/login"
+                    className="hidden lg:inline-block bg-[#004432] text-white px-4 py-3 rounded-tl-lg rounded-br-lg hover:bg-[#03614d] font-medium whitespace-nowrap transition text-sm sm:text-base"
+                  >
+                    Login
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -299,14 +333,25 @@ export default function Header() {
                 </Link>
               </li>
 
-              {/* Mobile Registration/Login button */}
+              {/* Mobile Registration/Login or Go To Dashboard button */}
               <li>
-                <a
-                  href="/login"
-                  className="block bg-[#004432] text-white px-4 py-3 rounded-tl-lg rounded-br-lg hover:bg-[#03614d] font-medium whitespace-nowrap text-center transition"
-                >
-                  Registration / Login
-                </a>
+                {isLoggedIn ? (
+                  <Link
+                    href="/user/dashboard"
+                    onClick={() => setOffcanvasOpen(false)}
+                    className="block bg-[#004432] text-white px-4 py-3 rounded-tl-lg rounded-br-lg hover:bg-[#03614d] font-medium whitespace-nowrap text-center transition"
+                  >
+                    Go To Dashboard
+                  </Link>
+                ) : (
+                  <Link
+                    href="/user/login" // Changed to /user/login to handle both cases
+                    onClick={() => setOffcanvasOpen(false)}
+                    className="block bg-[#004432] text-white px-4 py-3 rounded-tl-lg rounded-br-lg hover:bg-[#03614d] font-medium whitespace-nowrap text-center transition"
+                  >
+                    Registration / Login
+                  </Link>
+                )}
               </li>
             </ul>
           </div>
