@@ -128,7 +128,7 @@ export default function Header() {
           <div className="max-w-[1280px] mx-auto px-4 flex items-center justify-between h-[60px]">
 
             {/* Desktop navigation menu (hidden on mobile) */}
-            <ul className="hidden lg:flex space-x-4 h-full">
+            <ul className="hidden lg:flex space-x-4 h-full w-100 justify-evenly">
               {/* Each list item has a link, and highlights if current page */}
               <li className="h-full flex items-center">
                 <Link
