@@ -23,6 +23,9 @@ interface UserProfileData {
   // Add other fields you fetch and display here
 }
 
+// Define max file size (5MB in bytes)
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+
 export default function Profile() {
   useAuthRedirect(); // 👈 Ensures user is logged in
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -84,12 +87,26 @@ export default function Profile() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // --- START: File size validation ---
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        setMessage(`❌ File size exceeds the 5MB limit. Please choose a smaller image.`);
+        // Clear the file input
+        e.target.value = '';
+        setSelectedImageFile(null);
+        // Revert displayed image to current profile photo or default
+        setDisplayedImageUrl(formData.profilePhoto || "/profile-photo.png");
+        return; // Stop further processing
+      }
+      // --- END: File size validation ---
+
       setSelectedImageFile(file); // Store the actual file
       setDisplayedImageUrl(URL.createObjectURL(file)); // Create temporary URL for immediate display
+      setMessage(""); // Clear any previous messages if a valid file is selected
     } else {
       setSelectedImageFile(null);
       // If no file selected, revert to current profile photo or default
       setDisplayedImageUrl(formData.profilePhoto || "/profile-photo.png");
+      setMessage(""); // Clear message if input is cleared
     }
   };
 
