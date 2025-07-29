@@ -195,11 +195,11 @@ export default function Home() {
             </div>
           ))}
 
-          <div className="flex justify-end pt-4">
+          {/* <div className="flex justify-end pt-4">
             <button className="cursor-pointer bg-[#004733] text-white text-sm md:text-base px-4 py-2 rounded-md hover:bg-[#035c40] transition">
               VIEW MORE
             </button>
-          </div>
+          </div> */}
         </div>
       </section>
 

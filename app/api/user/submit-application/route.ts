@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
 import { createApplication, ApplicationStatus, findApplicationByUserId } from "@/lib/models/application";
 import jwt from "jsonwebtoken";
+import nodemailer from "nodemailer"; // Import Nodemailer
 
 // Define JWT payload type
 interface JwtPayload {
@@ -10,6 +11,27 @@ interface JwtPayload {
   iat?: number;
   exp?: number;
 }
+
+// --- Nodemailer Transporter Configuration ---
+// You will need to replace these with your actual SMTP details.
+// For example, if using Gmail:
+// host: 'smtp.gmail.com',
+// port: 465, // or 587
+// secure: true, // true for 465, false for other ports
+// auth: {
+//   user: process.env.EMAIL_USER, // Your email address
+//   pass: process.env.EMAIL_PASS, // Your email password or app-specific password
+// }
+// If using SendGrid, Mailgun, etc., consult their documentation for SMTP details.
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST, // e.g., 'smtp.sendgrid.net' or 'smtp.mailgun.org'
+  port: parseInt(process.env.EMAIL_PORT || '587'), // e.g., 587 or 465
+  secure: process.env.EMAIL_SECURE === 'true', // Use 'true' for port 465, 'false' for 587
+  auth: {
+    user: process.env.EMAIL_USER, // Your email address or API key username
+    pass: process.env.EMAIL_PASS, // Your email password or API key
+  },
+});
 
 export async function POST(req: NextRequest) {
   try {
@@ -117,12 +139,31 @@ export async function POST(req: NextRequest) {
 
     const result = await createApplication(applicationData);
 
-    // --- EMAIL SENDING PLACEHOLDER ---
-    // In a real application, you would integrate an email sending service here.
-    // Example using a hypothetical internal email utility:
-    // await sendApplicationConfirmationEmail(userEmail, userName, applicationData);
-    console.log(`Email notification would be sent to ${userEmail} for application by ${userName}.`);
-    // --- END EMAIL SENDING PLACEHOLDER ---
+    // --- ACTUAL EMAIL SENDING ---
+    try {
+      await transporter.sendMail({
+        from: process.env.EMAIL_FROM, // Your sender email address (e.g., 'no-reply@yourdomain.com')
+        to: userEmail,
+        subject: 'Application Submission Confirmation - Board of Examination',
+        html: `
+          <p>Dear ${userName},</p>
+          <p>Thank you for submitting your application to the Board of Examination (For Boiler Engineers).</p>
+          <p>Your application has been received and is currently under review. We will notify you of its status as soon as possible.</p>
+          <p>For any queries, please do not hesitate to contact us.</p>
+          <p>Sincerely,</p>
+          <p>The Board of Examination Team</p>
+          <hr>
+          <p><small>This is an automated email, please do not reply.</small></p>
+        `,
+      });
+      console.log(`Application confirmation email sent to ${userEmail}.`);
+    } catch (emailError) {
+      console.error(`Failed to send application confirmation email to ${userEmail}:`, emailError);
+      // Decide if you want to return an error to the user or just log it and proceed
+      // For critical applications, you might want to return a 500 here.
+      // For now, we'll log and proceed, as the application itself was submitted.
+    }
+    // --- END ACTUAL EMAIL SENDING ---
 
     return NextResponse.json({ success: true, id: result.insertedId, message: "Application submitted successfully! A confirmation email has been sent." });
   } catch (err) {
