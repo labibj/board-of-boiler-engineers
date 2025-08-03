@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import sgMail from "@sendgrid/mail";
 
 // Set SendGrid API Key. It's crucial to set this at the start of the file.
-sgMail.setApiKey(process.env.EMAIL_PASS as string);
+sgMail.setApiKey(process.env.SENDGRID_API_KEY as string);
 
 // Define JWT payload type
 interface JwtPayload {
