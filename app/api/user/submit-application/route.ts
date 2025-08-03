@@ -1,5 +1,5 @@
 // A minor change to trigger a fresh Vercel build and clear the cache.
-// Date: August 14, 2025
+// Second attempt on August 14, 2025.
 
 import { NextRequest, NextResponse } from "next/server";
 import cloudinary from "@/lib/cloudinary";
