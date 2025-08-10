@@ -2,45 +2,46 @@ import mongoose, { Schema, Model } from 'mongoose';
 
 // 1. Define the User Interface
 export interface UserData {
-  _id?: mongoose.Types.ObjectId; // Add _id as an optional property for TypeScript
+  _id: mongoose.Types.ObjectId; // Make _id a required property
   name: string;
   email: string;
-  password?: string; // Password is optional when fetching, but required for creation
+  password?: string; 
   role: 'user' | 'admin';
-  cnic?: string; // Assuming cnic is an optional field
-  profilePhoto?: string; // URL to profile photo
-  __v?: number; // Mongoose version key, often included when using .lean()
+  cnic?: string;
+  profilePhoto?: string;
+  __v?: number;
 }
 
 // 2. Define the Mongoose Schema
 const UserSchema: Schema<UserData> = new Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true, select: false }, // 'select: false' prevents password from being returned by default queries
+  password: { type: String, required: true, select: false },
   role: { type: String, enum: ['user', 'admin'], default: 'user', required: true },
-  cnic: { type: String, unique: true, sparse: true }, // 'sparse: true' allows multiple null values
+  cnic: { type: String, unique: true, sparse: true },
   profilePhoto: { type: String },
 }, {
-  timestamps: true, // Adds createdAt and updatedAt timestamps
+  timestamps: true,
 });
 
 // Configure toJSON to ensure password is not included by default
 UserSchema.methods.toJSON = function() {
   const obj = this.toObject();
-  delete obj.password; // Explicitly delete password from the object when .toJSON() is called
+  delete obj.password;
   return obj;
 };
 
 // 3. Create the Mongoose Model (or get it if already defined)
 const User: Model<UserData> = mongoose.models.User || mongoose.model<UserData>('User', UserSchema);
 
-// 4. Database Helper Functions - Explicitly export
+// 4. Database Helper Functions
+
 /**
  * Creates a new user in the database.
  * @param userData The data for the new user.
  * @returns The newly created user document (without password).
  */
-export async function createUser(userData: UserData): Promise<UserData> {
+export async function createUser(userData: Omit<UserData, '_id' | '__v'>): Promise<UserData> {
   try {
     const newUser = new User(userData);
     const savedUser = await newUser.save();
@@ -59,7 +60,8 @@ export async function createUser(userData: UserData): Promise<UserData> {
 export async function findUserByEmail(email: string): Promise<UserData | null> {
   try {
     const user = await User.findOne({ email }).lean();
-    return user;
+    // Explicitly cast to UserData to include _id property from .lean() result
+    return user ? user as UserData : null;
   } catch (error) {
     console.error(`Error finding user by email ${email}:`, error);
     throw new Error(`Failed to find user by email: ${(error as Error).message}`);
@@ -74,7 +76,8 @@ export async function findUserByEmail(email: string): Promise<UserData | null> {
 export async function findUserById(id: string): Promise<UserData | null> {
   try {
     const user = await User.findById(id).lean();
-    return user;
+    // Explicitly cast to UserData to include _id property from .lean() result
+    return user ? user as UserData : null;
   } catch (error) {
     console.error(`Error finding user by ID ${id}:`, error);
     throw new Error(`Failed to find user by ID: ${(error as Error).message}`);
@@ -89,7 +92,7 @@ export async function findUserById(id: string): Promise<UserData | null> {
  */
 export async function updateUserProfile(id: string, updates: Partial<UserData>): Promise<boolean> {
   try {
-    const result = await User.updateOne({ _id: id }, { $set: updates });
+    const result = await User.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { $set: updates });
     return result.modifiedCount > 0;
   } catch (error) {
     console.error(`Error updating user profile for ID ${id}:`, error);
