@@ -1,101 +1,72 @@
-import mongoose, { Schema, Model } from 'mongoose';
+import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+import { findUserByEmail, updateUserProfile } from "@/lib/models/user";
 
-// 1. Define the User Interface
-export interface UserData {
-  _id: mongoose.Types.ObjectId; // Make _id a required property
-  name: string;
+// Define JWT payload type for admin (assuming role: 'admin')
+interface JwtPayload {
+  _id: string;
   email: string;
-  password?: string; 
-  role: 'user' | 'admin';
-  cnic?: string;
-  profilePhoto?: string;
-  __v?: number;
+  role: string; // Add role to the JWT payload
+  iat?: number;
+  exp?: number;
 }
 
-// 2. Define the Mongoose Schema
-const UserSchema: Schema<UserData> = new Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true, select: false },
-  role: { type: String, enum: ['user', 'admin'], default: 'user', required: true },
-  cnic: { type: String, unique: true, sparse: true },
-  profilePhoto: { type: String },
-}, {
-  timestamps: true,
-});
+// Ensure this API route is dynamically rendered and runs in Node.js runtime
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
-// Configure toJSON to ensure password is not included by default
-UserSchema.methods.toJSON = function() {
-  const obj = this.toObject();
-  delete obj.password;
-  return obj;
-};
-
-// 3. Create the Mongoose Model (or get it if already defined)
-const User: Model<UserData> = mongoose.models.User || mongoose.model<UserData>('User', UserSchema);
-
-// 4. Database Helper Functions
-
-/**
- * Creates a new user in the database.
- * @param userData The data for the new user.
- * @returns The newly created user document (without password).
- */
-export async function createUser(userData: Omit<UserData, '_id' | '__v'>): Promise<UserData> {
+export async function POST(request: NextRequest) {
   try {
-    const newUser = new User(userData);
-    const savedUser = await newUser.save();
-    return savedUser.toJSON() as UserData;
-  } catch (error) {
-    console.error("Error creating user:", error);
-    throw new Error(`Failed to create user: ${(error as Error).message}`);
-  }
-}
+    const token = request.headers.get("Authorization")?.split(" ")[1];
+    if (!token) {
+      console.error("Authorization Error: No token provided.");
+      return NextResponse.json({ error: "Unauthorized: No token provided." }, { status: 401 });
+    }
 
-/**
- * Finds a user by their email address.
- * @param email The email of the user to find.
- * @returns The user document if found, otherwise null.
- */
-export async function findUserByEmail(email: string): Promise<UserData | null> {
-  try {
-    const user = await User.findOne({ email }).lean();
-    // Explicitly cast to UserData to include _id property from .lean() result
-    return user ? user as UserData : null;
-  } catch (error) {
-    console.error(`Error finding user by email ${email}:`, error);
-    throw new Error(`Failed to find user by email: ${(error as Error).message}`);
-  }
-}
+    let decodedToken: JwtPayload;
+    try {
+      decodedToken = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
+    } catch (jwtError) {
+      console.error("Authorization Error: Invalid or expired token.", jwtError);
+      return NextResponse.json({ error: "Unauthorized: Invalid or expired token." }, { status: 401 });
+    }
 
-/**
- * Finds a user by their ID.
- * @param id The ID of the user to find.
- * @returns The user document if found, otherwise null.
- */
-export async function findUserById(id: string): Promise<UserData | null> {
-  try {
-    const user = await User.findById(id).lean();
-    // Explicitly cast to UserData to include _id property from .lean() result
-    return user ? user as UserData : null;
-  } catch (error) {
-    console.error(`Error finding user by ID ${id}:`, error);
-    throw new Error(`Failed to find user by ID: ${(error as Error).message}`);
-  }
-}
+    if (decodedToken.role !== "admin") {
+      return NextResponse.json({ error: "Forbidden: Only administrators can access this resource." }, { status: 403 });
+    }
 
-/**
- * Updates a user's profile by ID.
- * @param id The ID of the user to update.
- * @param updates The fields to update.
- * @returns True if the update was successful, false otherwise.
- */
-export async function updateUserProfile(id: string, updates: Partial<UserData>): Promise<boolean> {
-  try {
-    const result = await User.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { $set: updates });
-    return result.modifiedCount > 0;
+    const { identifier } = await request.json();
+
+    if (!identifier) {
+      return NextResponse.json({ error: "User identifier is required." }, { status: 400 });
+    }
+
+    const user = await findUserByEmail(identifier);
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found." }, { status: 404 });
+    }
+
+    // --- Placeholder for Roll Number Slip Generation Logic ---
+    const simulatedRollNo = `RNS-${Math.floor(Math.random() * 100000)}`;
+
+    // If you uncomment this, make sure 'rollNumber' is a field in your UserData interface in lib/models/user.ts
+    // const updated = await updateUserProfile(user._id!.toString(), { rollNumber: simulatedRollNo });
+    // if (!updated) {
+    //   console.error(`Failed to update user ${user._id} with roll number.`);
+    //   // You might want to return an error or handle this more gracefully
+    // }
+
+    return NextResponse.json({
+      success: true,
+      message: "Roll number slip generated successfully (simulated)!",
+      userId: user._id?.toString(), // Ensure _id is converted to string for consistency
+      userEmail: user.email,
+      rollNumber: simulatedRollNo,
+    });
+
   } catch (error) {
-    console.error(`Error updating user profile for ID ${id}:`, error);
-    throw new Error(`Failed to update user profile: ${(error as Error).message}`);
+    console.error("Failed to generate roll number slip:", error);
+    return NextResponse.json({ error: "Failed to generate roll number slip.", details: (error as Error).message }, { status: 500 });
   }
 }
