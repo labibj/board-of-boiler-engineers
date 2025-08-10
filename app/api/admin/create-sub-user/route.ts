@@ -3,7 +3,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs"; // For password hashing
-// Assuming you have these models/utilities for user operations
 import { createUser, findUserByEmail } from "@/lib/models/user"; 
 
 // Define JWT payload type for admin user (assuming admin tokens include role)
@@ -76,6 +75,7 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await bcrypt.hash(password, 10); // 10 is the salt rounds
 
     // 7. Create the new user in the database
+    // The createUser function already returns the user object without the password field
     const newUser = await createUser({
       name,
       email,
@@ -83,12 +83,9 @@ export async function POST(request: NextRequest) {
       role,
     });
 
-    // Ensure the password field is not returned in the response
-    // Changed '_' to '_password' to satisfy the linter's unused variable rule
-    const { password: _password, ...userWithoutPassword } = newUser;
-
-    console.log(`User created successfully: ${userWithoutPassword.email}`);
-    return NextResponse.json({ success: true, message: "Sub-user created successfully!", user: userWithoutPassword });
+    // Directly use newUser as it's already in the desired format (without password)
+    console.log(`User created successfully: ${newUser.email}`);
+    return NextResponse.json({ success: true, message: "Sub-user created successfully!", user: newUser });
 
   } catch (error: unknown) {
     let errorMessage = "An unknown error occurred.";
