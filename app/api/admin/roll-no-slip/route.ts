@@ -32,11 +32,9 @@ UserSchema.methods.toJSON = function() {
 };
 
 // 3. Create the Mongoose Model (or get it if already defined)
-// This check prevents Mongoose from recompiling the model if it's already defined
 const User: Model<UserData> = mongoose.models.User || mongoose.model<UserData>('User', UserSchema);
 
-// 4. Database Helper Functions
-
+// 4. Database Helper Functions - Explicitly export
 /**
  * Creates a new user in the database.
  * @param userData The data for the new user.
@@ -46,7 +44,6 @@ export async function createUser(userData: UserData): Promise<UserData> {
   try {
     const newUser = new User(userData);
     const savedUser = await newUser.save();
-    // Use .toJSON() which will now explicitly remove the password based on the schema method
     return savedUser.toJSON() as UserData;
   } catch (error) {
     console.error("Error creating user:", error);
@@ -61,7 +58,6 @@ export async function createUser(userData: UserData): Promise<UserData> {
  */
 export async function findUserByEmail(email: string): Promise<UserData | null> {
   try {
-    // .lean() returns a plain JS object, and 'select: false' on password should prevent it from being included
     const user = await User.findOne({ email }).lean();
     return user;
   } catch (error) {
