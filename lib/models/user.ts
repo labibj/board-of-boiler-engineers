@@ -9,7 +9,7 @@ export interface UserData {
   role: 'user' | 'admin';
   cnic?: string;
   profilePhoto?: string;
-  rollNumber?: string; // Existing rollNumber property
+  rollNumber?: string;
   rollNoSlipUrl?: string; // Added rollNoSlipUrl property
   __v?: number;
 }
@@ -22,7 +22,7 @@ const UserSchema: Schema<UserData> = new Schema({
   role: { type: String, enum: ['user', 'admin'], default: 'user', required: true },
   cnic: { type: String, unique: true, sparse: true },
   profilePhoto: { type: String },
-  rollNumber: { type: String }, // Existing rollNumber schema field
+  rollNumber: { type: String },
   rollNoSlipUrl: { type: String }, // Added rollNoSlipUrl to the schema
 }, {
   timestamps: true,
@@ -45,7 +45,7 @@ const User: Model<UserData> = mongoose.models.User || mongoose.model<UserData>('
  * @param userData The data for the new user.
  * @returns The newly created user document (without password).
  */
-export async function createUser(userData: Omit<UserData, '_id' | '__v'>): Promise<UserData> {
+export async function createUser(userData: Omit<UserData, '_id' | '__v' | 'rollNoSlipUrl' | 'rollNumber'>): Promise<UserData> {
   try {
     const newUser = new User(userData);
     const savedUser = await newUser.save();
@@ -55,6 +55,22 @@ export async function createUser(userData: Omit<UserData, '_id' | '__v'>): Promi
     throw new Error(`Failed to create user: ${(error as Error).message}`);
   }
 }
+
+/**
+ * Finds all users in the database.
+ * @returns A promise that resolves to an array of UserData, or an empty array if none found.
+ */
+export async function findAllUsers(): Promise<UserData[]> {
+  try {
+    const users = await User.find({}).lean(); // .lean() returns plain JS objects
+    // Map to UserData type to ensure _id is present
+    return users.map(user => user as UserData);
+  } catch (error) {
+    console.error("Error finding all users:", error);
+    throw new Error(`Failed to retrieve users: ${(error as Error).message}`);
+  }
+}
+
 
 /**
  * Finds a user by their email address.
