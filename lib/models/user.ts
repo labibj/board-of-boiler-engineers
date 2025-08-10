@@ -1,64 +1,94 @@
-// lib/models/user.ts
-import clientPromise from "../mongodb";
-import { Collection, ObjectId } from "mongodb";
+import mongoose, { Schema, Document, Model } from 'mongoose';
 
-// Interface for a user document
+// 1. Define the User Interface
 export interface UserData {
-  _id?: ObjectId;
   name: string;
   email: string;
-  cnic: string; // Assuming CNIC is stored as 'cnic' in your DB
-  profilePhoto?: string | null; // URL to GCS profile photo
-  rollNoSlipUrl?: string | null; // NEW: URL to GCS roll number slip PDF
-  password?: string; // Hashed password, optional for fetching
-  // Add other fields from your user document as needed
+  password?: string; // Password is optional when fetching, but required for creation
+  role: 'user' | 'admin';
+  cnic?: string; // Assuming cnic is an optional field
+  profilePhoto?: string; // URL to profile photo
 }
 
-// Function to get the users collection
-async function getUsersCollection(): Promise<Collection<UserData>> {
-  const client = await clientPromise;
-  // Ensure this matches the DB name in your MONGODB_URI or MONGODB_DB_NAME env var
-  const db = client.db(process.env.MONGODB_DB_NAME || "boiler_board");
-  return db.collection<UserData>("users");
-}
+// 2. Define the Mongoose Schema
+const UserSchema: Schema<UserData> = new Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true, select: false }, // 'select: false' prevents password from being returned by default queries
+  role: { type: String, enum: ['user', 'admin'], default: 'user', required: true },
+  cnic: { type: String, unique: true, sparse: true }, // 'sparse: true' allows multiple null values
+  profilePhoto: { type: String },
+}, {
+  timestamps: true, // Adds createdAt and updatedAt timestamps
+});
 
-// Function to find a user by ID
-export async function findUserById(userId: string): Promise<UserData | null> {
-  const collection = await getUsersCollection();
+// 3. Create the Mongoose Model (or get it if already defined)
+// This check prevents Mongoose from recompiling the model if it's already defined
+const User: Model<UserData> = mongoose.models.User || mongoose.model<UserData>('User', UserSchema);
+
+// 4. Database Helper Functions
+
+/**
+ * Creates a new user in the database.
+ * @param userData The data for the new user.
+ * @returns The newly created user document (without password).
+ */
+export async function createUser(userData: UserData): Promise<UserData> {
   try {
-    const user = await collection.findOne({ _id: new ObjectId(userId) });
-    return user;
+    const newUser = new User(userData);
+    const savedUser = await newUser.save();
+    // Return a plain object without the password field
+    const { password, ...userWithoutPassword } = savedUser.toObject();
+    return userWithoutPassword;
   } catch (error) {
-    console.error("Error finding user by ID:", error);
-    return null;
+    console.error("Error creating user:", error);
+    throw new Error(`Failed to create user: ${(error as Error).message}`);
   }
 }
 
-// Function to find a user by CNIC or Email (for admin assigning slips)
-export async function findUserByIdentifier(identifier: string): Promise<UserData | null> {
-  const collection = await getUsersCollection();
+/**
+ * Finds a user by their email address.
+ * @param email The email of the user to find.
+ * @returns The user document if found, otherwise null.
+ */
+export async function findUserByEmail(email: string): Promise<UserData | null> {
   try {
-    const user = await collection.findOne({
-      $or: [{ email: identifier }, { cnic: identifier }]
-    });
+    // We use .select('+password') if we need the password, otherwise it's excluded by default
+    const user = await User.findOne({ email }).lean(); // .lean() returns a plain JS object
     return user;
   } catch (error) {
-    console.error("Error finding user by identifier:", error);
-    return null;
+    console.error(`Error finding user by email ${email}:`, error);
+    throw new Error(`Failed to find user by email: ${(error as Error).message}`);
   }
 }
 
-// Function to update a user's profile or roll no slip
-export async function updateUserProfile(userId: string, updateData: Partial<UserData>): Promise<boolean> {
-  const collection = await getUsersCollection();
+/**
+ * Finds a user by their ID.
+ * @param id The ID of the user to find.
+ * @returns The user document if found, otherwise null.
+ */
+export async function findUserById(id: string): Promise<UserData | null> {
   try {
-    const result = await collection.updateOne(
-      { _id: new ObjectId(userId) },
-      { $set: updateData }
-    );
-    return result.modifiedCount === 1;
+    const user = await User.findById(id).lean();
+    return user;
   } catch (error) {
-    console.error("Error updating user profile:", error);
-    return false;
+    console.error(`Error finding user by ID ${id}:`, error);
+    throw new Error(`Failed to find user by ID: ${(error as Error).message}`);
+  }
+}
+
+/**
+ * Updates a user's profile by ID.
+ * @param id The ID of the user to update.
+ * @param updates The fields to update.
+ * @returns True if the update was successful, false otherwise.
+ */
+export async function updateUserProfile(id: string, updates: Partial<UserData>): Promise<boolean> {
+  try {
+    const result = await User.updateOne({ _id: id }, { $set: updates });
+    return result.modifiedCount > 0;
+  } catch (error) {
+    console.error(`Error updating user profile for ID ${id}:`, error);
+    throw new Error(`Failed to update user profile: ${(error as Error).message}`);
   }
 }
