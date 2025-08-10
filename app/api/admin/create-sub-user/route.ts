@@ -84,7 +84,8 @@ export async function POST(request: NextRequest) {
     });
 
     // Ensure the password field is not returned in the response
-    const { password: _, ...userWithoutPassword } = newUser;
+    // Changed '_' to '_password' to satisfy the linter's unused variable rule
+    const { password: _password, ...userWithoutPassword } = newUser;
 
     console.log(`User created successfully: ${userWithoutPassword.email}`);
     return NextResponse.json({ success: true, message: "Sub-user created successfully!", user: userWithoutPassword });
@@ -94,7 +95,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error) {
       errorMessage = error.message;
     }
-    console.error("Failed to create sub-user:", error);
-    return NextResponse.json({ error: "Failed to create sub-user.", details: errorMessage }, { status: 500 });
+    console.error("Form Submission Error:", error);
+    return NextResponse.json({ error: "Failed to submit application", details: errorMessage }, { status: 500 });
   }
 }
