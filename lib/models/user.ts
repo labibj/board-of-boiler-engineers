@@ -9,7 +9,8 @@ export interface UserData {
   role: 'user' | 'admin';
   cnic?: string;
   profilePhoto?: string;
-  rollNumber?: string; // Add rollNumber as an optional property
+  rollNumber?: string; // Existing rollNumber property
+  rollNoSlipUrl?: string; // Added rollNoSlipUrl property
   __v?: number;
 }
 
@@ -21,7 +22,8 @@ const UserSchema: Schema<UserData> = new Schema({
   role: { type: String, enum: ['user', 'admin'], default: 'user', required: true },
   cnic: { type: String, unique: true, sparse: true },
   profilePhoto: { type: String },
-  rollNumber: { type: String }, // Add rollNumber to the schema
+  rollNumber: { type: String }, // Existing rollNumber schema field
+  rollNoSlipUrl: { type: String }, // Added rollNoSlipUrl to the schema
 }, {
   timestamps: true,
 });
