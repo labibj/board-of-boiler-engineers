@@ -47,20 +47,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
 
-    // --- Placeholder for Roll Number Slip Generation Logic ---
+    // Explicitly get userId after null check to satisfy TypeScript
+    const userId = user._id.toString(); 
+
+    // --- Roll Number Slip Generation Logic ---
     const simulatedRollNo = `RNS-${Math.floor(Math.random() * 100000)}`;
 
-    // If you uncomment this, make sure 'rollNumber' is a field in your UserData interface in lib/models/user.ts
-    // const updated = await updateUserProfile(user._id!.toString(), { rollNumber: simulatedRollNo });
-    // if (!updated) {
-    //   console.error(`Failed to update user ${user._id} with roll number.`);
-    //   // You might want to return an error or handle this more gracefully
-    // }
+    // THESE LINES MUST BE UNCOMMENTED FOR updateUserProfile TO BE USED
+    const updated = await updateUserProfile(userId, { rollNumber: simulatedRollNo });
+    if (!updated) {
+      console.error(`Failed to update user ${userId} with roll number.`);
+      // You might want to return an error or handle this more gracefully
+    }
 
     return NextResponse.json({
       success: true,
       message: "Roll number slip generated successfully (simulated)!",
-      userId: user._id?.toString(), // Ensure _id is converted to string for consistency
+      userId: userId, 
       userEmail: user.email,
       rollNumber: simulatedRollNo,
     });
