@@ -9,6 +9,7 @@ export interface UserData {
   role: 'user' | 'admin';
   cnic?: string;
   profilePhoto?: string;
+  rollNumber?: string; // Add rollNumber as an optional property
   __v?: number;
 }
 
@@ -20,6 +21,7 @@ const UserSchema: Schema<UserData> = new Schema({
   role: { type: String, enum: ['user', 'admin'], default: 'user', required: true },
   cnic: { type: String, unique: true, sparse: true },
   profilePhoto: { type: String },
+  rollNumber: { type: String }, // Add rollNumber to the schema
 }, {
   timestamps: true,
 });
@@ -60,7 +62,6 @@ export async function createUser(userData: Omit<UserData, '_id' | '__v'>): Promi
 export async function findUserByEmail(email: string): Promise<UserData | null> {
   try {
     const user = await User.findOne({ email }).lean();
-    // Explicitly cast to UserData to ensure _id is recognized
     return user ? user as UserData : null;
   } catch (error) {
     console.error(`Error finding user by email ${email}:`, error);
@@ -76,7 +77,6 @@ export async function findUserByEmail(email: string): Promise<UserData | null> {
 export async function findUserById(id: string): Promise<UserData | null> {
   try {
     const user = await User.findById(id).lean();
-    // Explicitly cast to UserData to ensure _id is recognized
     return user ? user as UserData : null;
   } catch (error) {
     console.error(`Error finding user by ID ${id}:`, error);
