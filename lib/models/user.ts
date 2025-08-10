@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Model } from 'mongoose';
+import mongoose, { Schema, Model } from 'mongoose'; // Removed 'Document' as it was unused
 
 // 1. Define the User Interface
 export interface UserData {
@@ -22,6 +22,13 @@ const UserSchema: Schema<UserData> = new Schema({
   timestamps: true, // Adds createdAt and updatedAt timestamps
 });
 
+// Configure toJSON to ensure password is not included by default
+UserSchema.methods.toJSON = function() {
+  const obj = this.toObject();
+  delete obj.password; // Explicitly delete password from the object when .toJSON() is called
+  return obj;
+};
+
 // 3. Create the Mongoose Model (or get it if already defined)
 // This check prevents Mongoose from recompiling the model if it's already defined
 const User: Model<UserData> = mongoose.models.User || mongoose.model<UserData>('User', UserSchema);
@@ -37,9 +44,8 @@ export async function createUser(userData: UserData): Promise<UserData> {
   try {
     const newUser = new User(userData);
     const savedUser = await newUser.save();
-    // Return a plain object without the password field
-    const { password, ...userWithoutPassword } = savedUser.toObject();
-    return userWithoutPassword;
+    // Use .toJSON() which will now explicitly remove the password based on the schema method
+    return savedUser.toJSON() as UserData;
   } catch (error) {
     console.error("Error creating user:", error);
     throw new Error(`Failed to create user: ${(error as Error).message}`);
@@ -53,8 +59,8 @@ export async function createUser(userData: UserData): Promise<UserData> {
  */
 export async function findUserByEmail(email: string): Promise<UserData | null> {
   try {
-    // We use .select('+password') if we need the password, otherwise it's excluded by default
-    const user = await User.findOne({ email }).lean(); // .lean() returns a plain JS object
+    // .lean() returns a plain JS object, and 'select: false' on password should prevent it from being included
+    const user = await User.findOne({ email }).lean();
     return user;
   } catch (error) {
     console.error(`Error finding user by email ${email}:`, error);
