@@ -5,7 +5,7 @@ export interface UserData {
   _id: mongoose.Types.ObjectId; // Explicitly required
   name: string;
   email: string;
-  password?: string; // Password is optional when fetching, but required for creation/login comparison
+  password?: string; 
   role: 'user' | 'admin';
   cnic?: string;
   profilePhoto?: string;
@@ -18,7 +18,7 @@ export interface UserData {
 const UserSchema: Schema<UserData> = new Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true, select: false }, // 'select: false' prevents password from being returned by default queries
+  password: { type: String, required: true, select: false },
   role: { type: String, enum: ['user', 'admin'], default: 'user', required: true },
   cnic: { type: String, unique: true, sparse: true },
   profilePhoto: { type: String },
@@ -26,6 +26,7 @@ const UserSchema: Schema<UserData> = new Schema({
   rollNoSlipUrl: { type: String }, 
 }, {
   timestamps: true,
+  collection: 'admins' // ⭐ FIX: Explicitly set the collection name to 'admins'
 });
 
 // Configure toJSON to ensure password is not included by default
