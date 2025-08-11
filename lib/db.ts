@@ -1,37 +1,59 @@
-import { MongoClient } from "mongodb";
+import mongoose, { Mongoose } from 'mongoose';
 
-const uri = process.env.MONGODB_URI!;
-const options = {};
+// Check if MONGODB_URI is defined
+const MONGODB_URI = process.env.MONGODB_URI;
 
-// ✅ Extend types only — do not redeclare actual variable
-declare global {
-  // eslint-disable-next-line no-var
-  var _mongoClientPromise: Promise<MongoClient> | undefined;
+if (!MONGODB_URI) {
+  throw new Error('Please define the MONGODB_URI environment variable inside .env.local or Vercel config.');
 }
 
-let client: MongoClient;
-let clientPromise: Promise<MongoClient>;
-
-if (!process.env.MONGODB_URI) {
-  throw new Error("Please add your Mongo URI to .env.local");
+// Define the shape of our cached object for Mongoose connection
+interface CachedMongoose {
+  conn: Mongoose | null;
+  promise: Promise<Mongoose> | null;
 }
 
-if (process.env.NODE_ENV === "development") {
-  // ✅ In development, reuse existing connection
-  if (!global._mongoClientPromise) {
-    client = new MongoClient(uri, options);
-    global._mongoClientPromise = client.connect();
+// Declare cached with its specific type and explicitly assert global.mongoose's type
+let cached: CachedMongoose = (global.mongoose as CachedMongoose | undefined) || { conn: null, promise: null };
+
+async function dbConnect() {
+  // If a connection is already established, return it
+  if (cached.conn) {
+    console.log("Using cached Mongoose connection.");
+    return cached.conn;
   }
-  clientPromise = global._mongoClientPromise!;
-} else {
-  // ✅ In production, always create a new client
-  client = new MongoClient(uri, options);
-  clientPromise = client.connect();
+
+  // If there's no ongoing connection promise, create one
+  if (!cached.promise) {
+    const opts = {
+      bufferCommands: false, // Disable Mongoose's buffering (we want explicit connection)
+      useNewUrlParser: true, // Recommended by MongoDB driver for new URL string parser
+      useUnifiedTopology: true, // Recommended by MongoDB driver for new server discovery and monitoring engine
+      serverSelectionTimeoutMS: 30000, // Keep trying to send operations for 30 seconds
+      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+    };
+
+    // ⭐ FIX: Add non-null assertion operator (!) to MONGODB_URI
+    cached.promise = mongoose.connect(MONGODB_URI!, opts) // MONGODB_URI is guaranteed to be string here due to check above
+      .then((mongooseInstance) => {
+        console.log("Mongoose connected successfully.");
+        return mongooseInstance;
+      })
+      .catch(err => {
+        console.error("Mongoose connection failed:", err);
+        cached.promise = null; // Reset promise on failure to allow retry
+        throw err; // Re-throw to propagate the error
+      });
+  }
+
+  // Await the connection promise and cache the connection instance
+  try {
+    cached.conn = await cached.promise;
+    return cached.conn;
+  } catch (e) {
+    cached.promise = null; // Ensure promise is reset if `await` fails
+    throw e; // Re-throw to propagate the error
+  }
 }
 
-// ✅ Reusable DB connection export
-export async function connectDB() {
-  const client = await clientPromise;
-  const db = client.db(); // Optionally: client.db("your-db-name")
-  return { client, db };
-}
+export default dbConnect;
