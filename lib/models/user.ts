@@ -5,12 +5,12 @@ export interface UserData {
   _id: mongoose.Types.ObjectId; // Explicitly required
   name: string;
   email: string;
-  password?: string; 
+  password?: string; // Password is optional when fetching, but required for creation/login comparison
   role: 'user' | 'admin';
   cnic?: string;
   profilePhoto?: string;
   rollNumber?: string;
-  rollNoSlipUrl?: string; // Added rollNoSlipUrl property
+  rollNoSlipUrl?: string; 
   __v?: number;
 }
 
@@ -18,12 +18,12 @@ export interface UserData {
 const UserSchema: Schema<UserData> = new Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true, select: false },
+  password: { type: String, required: true, select: false }, // 'select: false' prevents password from being returned by default queries
   role: { type: String, enum: ['user', 'admin'], default: 'user', required: true },
   cnic: { type: String, unique: true, sparse: true },
   profilePhoto: { type: String },
   rollNumber: { type: String },
-  rollNoSlipUrl: { type: String }, // Added rollNoSlipUrl to the schema
+  rollNoSlipUrl: { type: String }, 
 }, {
   timestamps: true,
 });
@@ -57,29 +57,18 @@ export async function createUser(userData: Omit<UserData, '_id' | '__v' | 'rollN
 }
 
 /**
- * Finds all users in the database.
- * @returns A promise that resolves to an array of UserData, or an empty array if none found.
- */
-export async function findAllUsers(): Promise<UserData[]> {
-  try {
-    const users = await User.find({}).lean(); // .lean() returns plain JS objects
-    // Map to UserData type to ensure _id is present
-    return users.map(user => user as UserData);
-  } catch (error) {
-    console.error("Error finding all users:", error);
-    throw new Error(`Failed to retrieve users: ${(error as Error).message}`);
-  }
-}
-
-
-/**
  * Finds a user by their email address.
  * @param email The email of the user to find.
+ * @param includePassword If true, the password field will be included in the returned user object.
  * @returns The user document if found, otherwise null.
  */
-export async function findUserByEmail(email: string): Promise<UserData | null> {
+export async function findUserByEmail(email: string, includePassword: boolean = false): Promise<UserData | null> {
   try {
-    const user = await User.findOne({ email }).lean();
+    let query = User.findOne({ email });
+    if (includePassword) {
+      query = query.select('+password'); // Explicitly select password for login
+    }
+    const user = await query.lean();
     return user ? user as UserData : null;
   } catch (error) {
     console.error(`Error finding user by email ${email}:`, error);
@@ -99,6 +88,20 @@ export async function findUserById(id: string): Promise<UserData | null> {
   } catch (error) {
     console.error(`Error finding user by ID ${id}:`, error);
     throw new Error(`Failed to find user by ID: ${(error as Error).message}`);
+  }
+}
+
+/**
+ * Finds all users in the database.
+ * @returns A promise that resolves to an array of UserData, or an empty array if none found.
+ */
+export async function findAllUsers(): Promise<UserData[]> {
+  try {
+    const users = await User.find({}).lean();
+    return users.map(user => user as UserData);
+  } catch (error) {
+    console.error("Error finding all users:", error);
+    throw new Error(`Failed to retrieve users: ${(error as Error).message}`);
   }
 }
 

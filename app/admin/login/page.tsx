@@ -18,7 +18,8 @@ export default function AdminLogin() {
     setError(''); // Clear previous errors
 
     try {
-      const res = await fetch('/api/admin', {
+      // ⭐ CRUCIAL CHANGE: Point to the new admin login API route
+      const res = await fetch('/api/auth/admin-login', { 
         method: 'POST',
         body: JSON.stringify({ email, password }),
         headers: {
@@ -28,26 +29,27 @@ export default function AdminLogin() {
 
       const data = await res.json();
 
-      if (res.ok) {
+      if (res.ok && data.success) { // Check for data.success as well
         // ✅ CRUCIAL CHANGE: Store the token from the response body in localStorage
-        localStorage.setItem('token', data.token);
-        alert('Login successful!');
-        router.push('/admin/dashboard');
+        localStorage.setItem('admin_token', data.token); // Use 'admin_token' for clarity
+        // alert('Login successful!'); // Using alert is discouraged in production. Consider a modal or toast.
+        router.push('/admin/dashboard'); // Redirect to dashboard or relevant admin page
       } else {
-        setError(data.message || 'Login failed');
+        // Use data.message or data.error from the API response
+        setError(data.message || data.error || 'Login failed'); 
       }
     } catch (err) {
       console.error('Login error:', err);
-      setError('An unexpected error occurred during login.');
+      setError('An unexpected error occurred during login. Please check network.');
     } finally {
       setLoading(false); // Reset loading state
     }
   };
 
   return (
-    <div className="admin-login-container">
+    <div className="admin-login-container min-h-screen flex flex-col">
       <AdminHeader />
-      <section className="py-10 flex items-center justify-center bg-white px-4">
+      <section className="flex-grow flex items-center justify-center bg-white px-4 py-10">
         <div className="w-full max-w-sm bg-[#004432] p-6 rounded-lg shadow-md">
           <h2 className="text-2xl font-bold text-center text-white mb-5 font-poppins">
             Admin LOGIN
@@ -78,7 +80,7 @@ export default function AdminLogin() {
             >
               {loading ? 'Logging in...' : 'Login'}
             </button>
-            {error && <p className="error text-red-500 mt-2 text-sm text-center">{error}</p>}
+            {error && <p className="error text-red-300 mt-2 text-sm text-center">{error}</p>}
           </form>
         </div>
       </section>
