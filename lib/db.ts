@@ -13,7 +13,7 @@ interface CachedMongoose {
   promise: Promise<Mongoose> | null;
 }
 
-// ⭐ FIX: Change 'let cached' to 'const cached'
+// Declare cached with its specific type and explicitly assert global.mongoose's type
 const cached: CachedMongoose = (global.mongoose as CachedMongoose | undefined) || { conn: null, promise: null };
 
 async function dbConnect() {
@@ -27,8 +27,8 @@ async function dbConnect() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false, // Disable Mongoose's buffering (we want explicit connection)
-      useNewUrlParser: true, // Recommended by MongoDB driver for new URL string parser
-      useUnifiedTopology: true, // Recommended by MongoDB driver for new server discovery and monitoring engine
+      // Removed: useNewUrlParser: true, // Deprecated
+      // Removed: useUnifiedTopology: true, // Deprecated
       serverSelectionTimeoutMS: 30000, // Keep trying to send operations for 30 seconds
       socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
     };
