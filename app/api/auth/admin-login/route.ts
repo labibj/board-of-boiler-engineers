@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs"; // For password hashing
 import { findUserByEmail } from "@/lib/models/user"; // Your user model functions
 
-// Define JWT payload type for admin user
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface JwtPayload {
   _id: string;
   email: string;
@@ -51,7 +51,6 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Generate JWT
-    // FIX: Combine declaration and assignment for `decodedToken` to explicitly use JwtPayload
     const token = jwt.sign(
       { _id: user._id.toString(), email: user.email, role: user.role },
       process.env.JWT_SECRET as string,
