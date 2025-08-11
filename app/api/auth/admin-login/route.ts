@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Generate JWT
+    // FIX: Combine declaration and assignment for `decodedToken` to explicitly use JwtPayload
     const token = jwt.sign(
       { _id: user._id.toString(), email: user.email, role: user.role },
       process.env.JWT_SECRET as string,
