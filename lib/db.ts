@@ -13,8 +13,8 @@ interface CachedMongoose {
   promise: Promise<Mongoose> | null;
 }
 
-// Declare cached with its specific type and explicitly assert global.mongoose's type
-let cached: CachedMongoose = (global.mongoose as CachedMongoose | undefined) || { conn: null, promise: null };
+// ⭐ FIX: Change 'let cached' to 'const cached'
+const cached: CachedMongoose = (global.mongoose as CachedMongoose | undefined) || { conn: null, promise: null };
 
 async function dbConnect() {
   // If a connection is already established, return it
@@ -33,8 +33,8 @@ async function dbConnect() {
       socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
     };
 
-    // ⭐ FIX: Add non-null assertion operator (!) to MONGODB_URI
-    cached.promise = mongoose.connect(MONGODB_URI!, opts) // MONGODB_URI is guaranteed to be string here due to check above
+    // Add non-null assertion operator (!) to MONGODB_URI
+    cached.promise = mongoose.connect(MONGODB_URI!, opts)
       .then((mongooseInstance) => {
         console.log("Mongoose connected successfully.");
         return mongooseInstance;
