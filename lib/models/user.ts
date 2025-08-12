@@ -65,11 +65,16 @@ export async function createUser(userData: Omit<UserData, '_id' | '__v' | 'rollN
  */
 export async function findUserByEmail(email: string, includePassword: boolean = false): Promise<UserData | null> {
   try {
+    console.log(`findUserByEmail: Querying for email '${email}' in collection '${User.collection.name}'`);
     let query = User.findOne({ email });
     if (includePassword) {
       query = query.select('+password'); // Explicitly select password for login
     }
     const user = await query.lean();
+    console.log(`findUserByEmail: Query result for '${email}': ${user ? 'User found.' : 'User NOT found.'}`);
+    if (user) {
+        console.log("Found user document (partial view):", { _id: user._id, email: user.email, role: user.role });
+    }
     return user ? user as UserData : null;
   } catch (error) {
     console.error(`Error finding user by email ${email}:`, error);
