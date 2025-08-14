@@ -26,21 +26,20 @@ async function dbConnect() {
   // If there's no ongoing connection promise, create one
   if (!cached.promise) {
     const opts = {
-      bufferCommands: false, // Disable Mongoose's buffering (we want explicit connection)
-      // Removed: useNewUrlParser: true, // Deprecated
-      // Removed: useUnifiedTopology: true, // Deprecated
+      bufferCommands: false, // Disable Mongoose's buffering for explicit connection control
       serverSelectionTimeoutMS: 30000, // Keep trying to send operations for 30 seconds
       socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+      dbName: 'boiler_board', // Explicitly set the database name to match your Atlas setup
     };
 
-    // Add non-null assertion operator (!) to MONGODB_URI
+    console.log("Mongoose: Initiating new connection with URI:", MONGODB_URI); // Debug log for URI
     cached.promise = mongoose.connect(MONGODB_URI!, opts)
       .then((mongooseInstance) => {
-        console.log("Mongoose connected successfully.");
+        console.log("Mongoose connected successfully to database 'boiler_board'.");
         return mongooseInstance;
       })
       .catch(err => {
-        console.error("Mongoose connection failed:", err);
+        console.error("Mongoose connection failed:", err.message);
         cached.promise = null; // Reset promise on failure to allow retry
         throw err; // Re-throw to propagate the error
       });
@@ -49,9 +48,11 @@ async function dbConnect() {
   // Await the connection promise and cache the connection instance
   try {
     cached.conn = await cached.promise;
+    console.log("Mongoose: Connection cached successfully.");
     return cached.conn;
   } catch (e) {
     cached.promise = null; // Ensure promise is reset if `await` fails
+    console.error("Mongoose: Connection attempt failed:", (e as Error).message);
     throw e; // Re-throw to propagate the error
   }
 }
