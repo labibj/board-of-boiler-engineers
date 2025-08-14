@@ -10,20 +10,19 @@ export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false); // Added loading state
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true); // Set loading to true on submission
-    setError(''); // Clear previous errors
+    setLoading(true);
+    setError('');
 
-    // Trim and lowercase email, trim password
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedPassword = password.trim();
+    console.log("Frontend: Sending email:", trimmedEmail, "password:", trimmedPassword); // Added debug log
 
     try {
-      // ⭐ CRUCIAL CHANGE: Point to the new admin login API route
-      const res = await fetch('/api/auth/admin-login', { 
+      const res = await fetch('/api/auth/admin-login', {
         method: 'POST',
         body: JSON.stringify({ email: trimmedEmail, password: trimmedPassword }),
         headers: {
@@ -33,20 +32,17 @@ export default function AdminLogin() {
 
       const data = await res.json();
 
-      if (res.ok && data.success) { // Check for data.success as well
-        // ✅ CRUCIAL CHANGE: Store the token from the response body in localStorage
-        localStorage.setItem('admin_token', data.token); // Use 'admin_token' for clarity
-        // alert('Login successful!'); // Using alert is discouraged in production. Consider a modal or toast.
-        router.push('/admin/dashboard'); // Redirect to dashboard or relevant admin page
+      if (res.ok && data.success) {
+        localStorage.setItem('admin_token', data.token);
+        router.push('/admin/dashboard');
       } else {
-        // Use data.message or data.error from the API response
-        setError(data.message || data.error || 'Login failed'); 
+        setError(data.message || data.error || 'Login failed');
       }
     } catch (err) {
       console.error('Login error:', err);
       setError('An unexpected error occurred during login. Please check network.');
     } finally {
-      setLoading(false); // Reset loading state
+      setLoading(false);
     }
   };
 
@@ -77,9 +73,9 @@ export default function AdminLogin() {
             />
             <button
               type="submit"
-              disabled={loading} // Disable button while loading
+              disabled={loading}
               className={`w-full bg-white text-[#004432] font-semibold py-2 sm:py-2.5 md:py-3 text-sm sm:text-base rounded-md hover:bg-gray-100 transition ${
-                loading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer' // Style for disabled state
+                loading ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'
               }`}
             >
               {loading ? 'Logging in...' : 'Login'}
