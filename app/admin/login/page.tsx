@@ -17,11 +17,15 @@ export default function AdminLogin() {
     setLoading(true); // Set loading to true on submission
     setError(''); // Clear previous errors
 
+    // Trim and lowercase email, trim password
+    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedPassword = password.trim();
+
     try {
       // ⭐ CRUCIAL CHANGE: Point to the new admin login API route
       const res = await fetch('/api/auth/admin-login', { 
         method: 'POST',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: trimmedEmail, password: trimmedPassword }),
         headers: {
           'Content-Type': 'application/json',
         },

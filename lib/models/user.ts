@@ -36,6 +36,14 @@ UserSchema.methods.toJSON = function() {
   return obj;
 };
 
+// Normalize email before saving (trim and lowercase)
+UserSchema.pre('save', function(next) {
+  if (this.isModified('email')) {
+    this.email = this.email.trim().toLowerCase();
+  }
+  next();
+});
+
 // 3. Create the Mongoose Model (or get it if already defined)
 const User: Model<UserData> = mongoose.models.User || mongoose.model<UserData>('User', UserSchema);
 
@@ -48,7 +56,12 @@ const User: Model<UserData> = mongoose.models.User || mongoose.model<UserData>('
  */
 export async function createUser(userData: Omit<UserData, '_id' | '__v' | 'rollNoSlipUrl' | 'rollNumber'>): Promise<UserData> {
   try {
-    const newUser = new User(userData);
+    // Normalize email (though pre-save hook will also handle it)
+    const normalizedData = {
+      ...userData,
+      email: userData.email.trim().toLowerCase(),
+    };
+    const newUser = new User(normalizedData);
     const savedUser = await newUser.save();
     return savedUser.toJSON() as UserData;
   } catch (error) {
@@ -65,15 +78,20 @@ export async function createUser(userData: Omit<UserData, '_id' | '__v' | 'rollN
  */
 export async function findUserByEmail(email: string, includePassword: boolean = false): Promise<UserData | null> {
   try {
-    console.log(`findUserByEmail: Querying for email '${email}' in collection '${User.collection.name}'`);
-    let query = User.findOne({ email });
+    // Trim whitespace for query
+    const trimmedEmail = email.trim();
+    console.log(`findUserByEmail: Querying for email '${trimmedEmail}' in collection '${User.collection.name}'`);
+
+    // Use case-insensitive regex for exact match
+    let query = User.findOne({ email: { $regex: new RegExp(`^${trimmedEmail}$`, 'i') } });
     if (includePassword) {
       query = query.select('+password'); // Explicitly select password for login
     }
     const user = await query.lean();
-    console.log(`findUserByEmail: Query result for '${email}': ${user ? 'User found.' : 'User NOT found.'}`);
+    
+    console.log(`findUserByEmail: Query result for '${trimmedEmail}': ${user ? 'User found.' : 'User NOT found.'}`);
     if (user) {
-        console.log("Found user document (partial view):", { _id: user._id, email: user.email, role: user.role });
+      console.log("Found user document (partial view):", { _id: user._id, email: user.email, role: user.role });
     }
     return user ? user as UserData : null;
   } catch (error) {
@@ -119,6 +137,10 @@ export async function findAllUsers(): Promise<UserData[]> {
  */
 export async function updateUserProfile(id: string, updates: Partial<UserData>): Promise<boolean> {
   try {
+    // If updating email, normalize it (pre-save hook will handle, but explicit here too)
+    if (updates.email) {
+      updates.email = updates.email.trim().toLowerCase();
+    }
     const result = await User.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { $set: updates });
     return result.modifiedCount > 0;
   } catch (error) {

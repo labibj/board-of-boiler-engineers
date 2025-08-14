@@ -28,15 +28,17 @@ export async function POST(request: NextRequest) {
     console.log("Admin Login API: Database connection established or reused.");
 
     const { email, password } = await request.json();
-    console.log(`Admin Login API: Received login attempt for email: ${email}`);
+    // Trim email to handle any whitespace
+    const trimmedEmail = email.trim();
+    console.log(`Admin Login API: Received login attempt for email: ${trimmedEmail}`);
 
     // 1. Find the user by email
-    console.log(`Admin Login API: Calling findUserByEmail for ${email}...`);
-    const user = await findUserByEmail(email, true); // Pass true to select password
+    console.log(`Admin Login API: Calling findUserByEmail for ${trimmedEmail}...`);
+    const user = await findUserByEmail(trimmedEmail, true); // Pass true to select password
     console.log(`Admin Login API: User found status: ${user ? 'Found' : 'Not Found'}.`);
 
     if (!user) {
-      console.error(`Admin Login API: Login failed - User with email ${email} not found.`);
+      console.error(`Admin Login API: Login failed - User with email ${trimmedEmail} not found.`);
       return NextResponse.json({ message: "Invalid email or password." }, { status: 401 });
     }
 
