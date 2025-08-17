@@ -2,7 +2,6 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs"; // For password hashing
 import { createUser, findUserByEmail } from "@/lib/models/user"; 
 
 // Define JWT payload type for admin user (assuming admin tokens include role)
@@ -71,15 +70,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "User with this email already exists." }, { status: 409 });
     }
 
-    // 6. Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10); // 10 is the salt rounds
-
-    // 7. Create the new user in the database
-    // The createUser function already returns the user object without the password field
+    // 6. Create the new user in the database
+    // Pass plaintext password to createUser, which will handle hashing internally
     const newUser = await createUser({
       name,
       email,
-      password: hashedPassword, // Store the hashed password
+      password, // Pass plaintext password
       role,
     });
 
