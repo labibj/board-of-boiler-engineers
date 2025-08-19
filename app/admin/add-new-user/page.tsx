@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { FaBell, FaSignOutAlt, FaEllipsisV, FaBars, FaTimes  } from "react-icons/fa";
+import { FaBell, FaSignOutAlt, FaEllipsisV, FaBars, FaTimes, FaTrash } from "react-icons/fa";
 import AdminFooter from "@/app/components/AdminFooter";
 
 // Define the shape of the form data
@@ -18,7 +18,7 @@ interface UserInList {
   _id: string; // MongoDB ObjectId converted to string
   name: string;
   email: string;
-  role: 'user' | 'admin';
+  role: "user" | "admin";
   createdAt: string; // Assuming timestamps are enabled in your Mongoose schema
 }
 
@@ -26,7 +26,7 @@ interface UserInList {
 interface CreateUserSuccessResponse {
   success: true;
   message: string;
-  user: { id: number; name: string; email: string; password: string; role: string; };
+  user: { id: number; name: string; email: string; password: string; role: string };
 }
 
 interface CreateUserErrorResponse {
@@ -49,7 +49,6 @@ interface FetchUsersErrorResponse {
 
 type FetchUsersApiResponse = FetchUsersSuccessResponse | FetchUsersErrorResponse;
 
-
 export default function AddNewUser() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [formData, setFormData] = useState<UserFormData>({
@@ -59,7 +58,7 @@ export default function AddNewUser() {
     role: "user", // Default role
   });
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // State for user list
   const [userList, setUserList] = useState<UserInList[]>([]);
@@ -71,18 +70,18 @@ export default function AddNewUser() {
     setUsersLoading(true);
     setUsersError(null);
     try {
-      const token = localStorage.getItem('admin_token'); // Assuming admin token is stored
+      const token = localStorage.getItem("admin_token"); // Assuming admin token is stored
       if (!token) {
         setUsersError("Admin not authenticated. Please log in.");
         setUsersLoading(false);
         return;
       }
 
-      const response = await fetch('/api/admin/users', {
-        method: 'GET',
+      const response = await fetch("/api/admin/users", {
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
       });
 
@@ -101,10 +100,44 @@ export default function AddNewUser() {
     }
   };
 
+  // Function to delete a user
+  const handleDeleteUser = async (userId: string) => {
+    if (window.confirm("Are you sure you want to delete this user?")) {
+      try {
+        const token = localStorage.getItem("admin_token");
+        if (!token) {
+          setMessage({ type: "error", text: "Admin not authenticated. Please log in again." });
+          return;
+        }
+
+        const response = await fetch(`/api/admin/delete-sub-user`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ id: userId }),
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          setMessage({ type: "success", text: result.message });
+          fetchUserList(); // Refresh the user list
+        } else {
+          setMessage({ type: "error", text: result.error || "Failed to delete user." });
+        }
+      } catch (error) {
+        console.error("Error deleting user:", error);
+        setMessage({ type: "error", text: "An unexpected error occurred while deleting the user." });
+      }
+    }
+  };
+
   // Fetch users on component mount
   useEffect(() => {
     fetchUserList();
-  }, []); // Empty dependency array means this runs once on mount
+  }, []);
 
   // Handle input changes for the form fields
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -123,30 +156,30 @@ export default function AddNewUser() {
 
     // Basic client-side validation
     if (!formData.name || !formData.email || !formData.password || !formData.role) {
-      setMessage({ type: 'error', text: "All fields are required." });
+      setMessage({ type: "error", text: "All fields are required." });
       setLoading(false);
       return;
     }
 
     if (formData.password.length < 6) {
-      setMessage({ type: 'error', text: "Password must be at least 6 characters long." });
+      setMessage({ type: "error", text: "Password must be at least 6 characters long." });
       setLoading(false);
       return;
     }
 
     try {
-      const token = localStorage.getItem('admin_token'); // Get admin token for authorization
+      const token = localStorage.getItem("admin_token"); // Get admin token for authorization
       if (!token) {
-        setMessage({ type: 'error', text: "Admin not authenticated. Please log in again." });
+        setMessage({ type: "error", text: "Admin not authenticated. Please log in again." });
         setLoading(false);
         return;
       }
 
-      const response = await fetch('/api/admin/create-sub-user', {
-        method: 'POST',
+      const response = await fetch("/api/admin/create-sub-user", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // Send authorization token
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Send authorization token
         },
         body: JSON.stringify(formData),
       });
@@ -154,15 +187,15 @@ export default function AddNewUser() {
       const result: CreateUserApiResponse = await response.json();
 
       if (response.ok && result.success) {
-        setMessage({ type: 'success', text: result.message });
+        setMessage({ type: "success", text: result.message });
         setFormData({ name: "", email: "", password: "", role: "user" }); // Clear form
         fetchUserList(); // Refresh the user list after successful creation
       } else {
-        setMessage({ type: 'error', text: (result as CreateUserErrorResponse).error || "Failed to create sub-user." });
+        setMessage({ type: "error", text: (result as CreateUserErrorResponse).error || "Failed to create sub-user." });
       }
     } catch (apiError) {
       console.error("Error creating sub-user:", apiError);
-      setMessage({ type: 'error', text: "An unexpected error occurred. Please try again." });
+      setMessage({ type: "error", text: "An unexpected error occurred. Please try again." });
     } finally {
       setLoading(false);
     }
@@ -265,9 +298,7 @@ export default function AddNewUser() {
 
             {/* Display Messages */}
             {message && (
-              <div className={`p-3 rounded-md mb-4 text-center ${
-                message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-              }`}>
+              <div className={`p-3 rounded-md mb-4 text-center ${message.type === "success" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
                 {message.text}
               </div>
             )}
@@ -335,7 +366,7 @@ export default function AddNewUser() {
               <button
                 type="submit"
                 className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
-                  loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#004432] hover:bg-[#003522]'
+                  loading ? "bg-gray-400 cursor-not-allowed" : "bg-[#004432] hover:bg-[#003522]"
                 } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#004432]`}
                 disabled={loading}
               >
@@ -348,9 +379,7 @@ export default function AddNewUser() {
           <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-4xl mt-8">
             <h2 className="text-2xl font-bold text-center text-[#004432] mb-6">Existing Users</h2>
 
-            {usersLoading && (
-              <div className="text-center text-gray-600">Loading users...</div>
-            )}
+            {usersLoading && <div className="text-center text-gray-600">Loading users...</div>}
 
             {usersError && (
               <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
@@ -358,9 +387,7 @@ export default function AddNewUser() {
               </div>
             )}
 
-            {!usersLoading && !usersError && userList.length === 0 && (
-              <div className="text-center text-gray-600">No users found.</div>
-            )}
+            {!usersLoading && !usersError && userList.length === 0 && <div className="text-center text-gray-600">No users found.</div>}
 
             {!usersLoading && !usersError && userList.length > 0 && (
               <div className="overflow-x-auto">
@@ -379,22 +406,25 @@ export default function AddNewUser() {
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Joined
                       </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {userList.map((user) => (
                       <tr key={user._id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {user.name}
-                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.role}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(user.createdAt).toLocaleDateString()}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {user.email}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {user.role}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(user.createdAt).toLocaleDateString()}
+                          <button
+                            onClick={() => handleDeleteUser(user._id)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <FaTrash size={18} />
+                          </button>
                         </td>
                       </tr>
                     ))}

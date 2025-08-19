@@ -48,6 +48,9 @@ UserSchema.pre('save', function(next) {
 // 3. Create the Mongoose Model (or get it if already defined)
 const User: Model<UserData> = mongoose.models.User || mongoose.model<UserData>('User', UserSchema);
 
+// Export the User model
+export { User };
+
 // 4. Database Helper Functions
 
 /**
