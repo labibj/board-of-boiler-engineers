@@ -21,7 +21,8 @@ type ApplicationStatus = "Pending" | "Accepted" | "Cancelled" | "Held";
 
 export default function AdminApplications() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [applications, setApplications] = useState<ApplicationData[]>([]);
+  const [applications, setApplications] = useState<ApplicationData[]>(
+[]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("All"); // For status filter
@@ -33,10 +34,10 @@ export default function AdminApplications() {
     setLoading(true);
     setMessage("");
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("admin_token");
       if (!token) {
         setMessage("Admin not authenticated. Redirecting to login.");
-        router.replace("/admin/login"); // Redirect if not authenticated
+        router.replace("/admin/login");
         return;
       }
 
@@ -54,7 +55,23 @@ export default function AdminApplications() {
 
       const data = await res.json();
       if (res.ok) {
-        setApplications(data.applications);
+        // setApplications(data.applications);
+        setApplications([
+  {
+    _id: "654321abcdef01234567890",
+    fullName: "Alice Smith",
+    dob: "1995-03-15",
+    submittedAt: "2025-07-20T10:30:00Z", 
+    status: "Pending", 
+  },
+  {
+    _id: "987654fedcba9876543210fe",
+    fullName: "Bob Johnson",
+    dob: "1990-11-22",
+    submittedAt: "2025-06-01T14:00:00Z",
+    status: "Accepted",
+  },
+])
       } else {
         setMessage(`❌ Failed to load applications: ${data.error || 'Unknown error'}`);
         console.error("Failed to fetch applications:", data);
@@ -73,12 +90,17 @@ export default function AdminApplications() {
   // Fetch applications on component mount and when filterStatus or fetchApplications changes
   useEffect(() => {
     fetchApplications(filterStatus);
-  }, [fetchApplications, filterStatus]); // Now, fetchApplications is a stable dependency. filterStatus is still needed because the effect needs to re-run when filterStatus changes.
+  }, [fetchApplications, filterStatus]);
+
+
+
+
+   // Now, fetchApplications is a stable dependency. filterStatus is still needed because the effect needs to re-run when filterStatus changes.
 
   const handleStatusUpdate = async (applicationId: string, newStatus: ApplicationStatus) => {
     setMessage("");
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("admin_token");
       if (!token) {
         setMessage("Admin not authenticated. Redirecting to login.");
         router.replace("/admin/login");
@@ -97,7 +119,7 @@ export default function AdminApplications() {
       const data = await res.json();
       if (res.ok) {
         setMessage(`✅ Application status updated to ${newStatus}.`);
-        fetchApplications(filterStatus); // Refresh list after update
+        fetchApplications(filterStatus);
       } else {
         setMessage(`❌ Failed to update status: ${data.error || data.message || 'Unknown error'}`);
         console.error("Status update error:", data);
@@ -109,7 +131,7 @@ export default function AdminApplications() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token"); // Clear token
+    localStorage.removeItem("admin_token"); // Clear token
     router.replace("/admin/login"); // Redirect to admin login
   };
 
@@ -313,7 +335,7 @@ export default function AdminApplications() {
                 </div>
               ))}
             </div>
-          )}
+           )}
         </section>
         {/* Admin Footer */}
         <AdminFooter />
