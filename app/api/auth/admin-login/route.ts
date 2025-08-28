@@ -3,7 +3,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs"; // For password hashing
-import { findUserByEmail } from "@/lib/models/user"; // Your user model functions
+// ⭐ FIX: Import findAdminByEmail
+import { findAdminByEmail } from "@/lib/models/user"; 
 import dbConnect from "@/lib/db"; // Assuming your dbConnect is in lib/db.ts
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -21,36 +22,34 @@ export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
-    // ⭐ Explicitly connect to the database at the very start of the handler
     console.log("Admin Login API: Starting request.");
     console.log("Admin Login API: Attempting to connect to database...");
     await dbConnect();
     console.log("Admin Login API: Database connection established or reused.");
 
     const { email, password } = await request.json();
-    // Trim email to handle any whitespace
-    const trimmedEmail = email.trim();
-    console.log(`Admin Login API: Received login attempt for email: ${trimmedEmail}, password: ${password}`); // Added password log
+    console.log(`Admin Login API: Received login attempt for email: ${email}`);
 
     // 1. Find the user by email
-    console.log(`Admin Login API: Calling findUserByEmail for ${trimmedEmail}...`);
-    const user = await findUserByEmail(trimmedEmail, true); // Pass true to select password
+    console.log(`Admin Login API: Calling findAdminByEmail for ${email}...`);
+    // ⭐ FIX: Use findAdminByEmail
+    const user = await findAdminByEmail(email, true); // Pass true to select password
     console.log(`Admin Login API: User found status: ${user ? 'Found' : 'Not Found'}.`);
 
     if (!user) {
-      console.error(`Admin Login API: Login failed - User with email ${trimmedEmail} not found.`);
+      console.error(`Admin Login API: Login failed - User with email ${email} not found.`);
       return NextResponse.json({ message: "Invalid email or password." }, { status: 401 });
     }
 
     // 2. Verify password
     if (!user.password) {
-      console.error(`Admin Login API: Login failed - Password not retrieved for user ${user.email}. This indicates an issue with findUserByEmail(..., true).`);
-      return NextResponse.json({ message: "Authentication error. Please contact support." }, { status: 500 });
+        console.error(`Admin Login API: Login failed - Password not retrieved for user ${user.email}.`);
+        return NextResponse.json({ message: "Authentication error. Please contact support." }, { status: 500 });
     }
     console.log("Admin Login API: Comparing passwords...");
-    console.log(`Admin Login API: Stored password hash: ${user.password}`); // Added debug log for stored hash
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    console.log(`Admin Login API: Password comparison result: ${isPasswordValid}`); // Added debug log
+    console.log(`Admin Login API: Password comparison result: ${isPasswordValid}`);
+
     if (!isPasswordValid) {
       console.error(`Admin Login API: Login failed - Invalid password for user ${user.email}.`);
       return NextResponse.json({ message: "Invalid email or password." }, { status: 401 });
