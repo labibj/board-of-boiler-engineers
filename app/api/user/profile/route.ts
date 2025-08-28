@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-import { findUserById } from "@/lib/models/user"; // Import findUserById
-import dbConnect from "@/lib/db"; // Import dbConnect
+import { findRegularUserById } from "@/lib/models/user"; // ⭐ FIX: Import findRegularUserById
+import dbConnect from "@/lib/db";
 
 // Define JWT payload type for user
 interface JwtPayload {
@@ -17,7 +17,6 @@ export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest) {
   try {
-    // ⭐ FIX: Explicitly connect to the database at the very start of the handler
     console.log("User Profile API: Starting request.");
     await dbConnect();
     console.log("User Profile API: Database connection established or reused.");
@@ -39,8 +38,8 @@ export async function GET(req: NextRequest) {
     const userId = decoded._id; // Extract user ID from the decoded token
     console.log(`User Profile API: Fetching profile for userId: ${userId}`);
 
-    // Use the findUserById function from your model
-    const user = await findUserById(userId);
+    // ⭐ FIX: Use findRegularUserById for regular users
+    const user = await findRegularUserById(userId);
     console.log(`User Profile API: User found status: ${user ? 'Found' : 'Not Found'}.`);
 
     if (!user) {
@@ -48,7 +47,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, message: "User profile not found." }, { status: 404 });
     }
 
-    // Return the found user profile (ensure password is not included by toJSON)
     return NextResponse.json({ success: true, user: user });
 
   } catch (err) {

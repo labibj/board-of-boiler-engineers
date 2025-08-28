@@ -1,174 +1,181 @@
 import mongoose, { Schema, Model } from 'mongoose';
-import bcrypt from 'bcryptjs'; // Import bcryptjs for hashing
 
-// 1. Define the User Interface
+// 1. Define the User Interface (Common for both Admin and Regular User)
 export interface UserData {
   _id: mongoose.Types.ObjectId; // Explicitly required
   name: string;
   email: string;
-  password?: string; 
+  password?: string;
   role: 'user' | 'admin';
   cnic?: string;
   profilePhoto?: string;
   rollNumber?: string;
-  rollNoSlipUrl?: string; 
+  rollNoSlipUrl?: string;
   __v?: number;
 }
 
-// 2. Define the Mongoose Schema
-const UserSchema: Schema<UserData> = new Schema({
+// 2. Define the Mongoose Schemas
+
+// Admin Schema (targets 'admins' collection)
+const AdminSchema: Schema<UserData> = new Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true, select: false },
-  role: { type: String, enum: ['user', 'admin'], default: 'user', required: true },
+  role: { type: String, enum: ['user', 'admin'], default: 'admin', required: true }, // Default to admin for this schema
   cnic: { type: String, unique: true, sparse: true },
   profilePhoto: { type: String },
   rollNumber: { type: String },
-  rollNoSlipUrl: { type: String }, 
+  rollNoSlipUrl: { type: String },
 }, {
   timestamps: true,
-  collection: 'admins' // Explicitly set the collection name to 'admins'
+  collection: 'admins' // Explicitly targets the 'admins' collection
 });
 
-// Configure toJSON to ensure password is not included by default
-UserSchema.methods.toJSON = function() {
+// Regular User Schema (targets 'users' collection)
+const RegularUserSchema: Schema<UserData> = new Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true, select: false },
+  role: { type: String, enum: ['user', 'admin'], default: 'user', required: true }, // Default to user for this schema
+  cnic: { type: String, unique: true, sparse: true },
+  profilePhoto: { type: String },
+  rollNumber: { type: String },
+  rollNoSlipUrl: { type: String },
+}, {
+  timestamps: true,
+  collection: 'users' // Explicitly targets the 'users' collection
+});
+
+// Configure toJSON for both schemas to ensure password is not included by default
+AdminSchema.methods.toJSON = function() {
   const obj = this.toObject();
   delete obj.password;
   return obj;
 };
 
-// Normalize email before saving (trim and lowercase)
-UserSchema.pre('save', function(next) {
-  if (this.isModified('email')) {
-    this.email = this.email.trim().toLowerCase();
-  }
-  next();
-});
+RegularUserSchema.methods.toJSON = function() {
+  const obj = this.toObject();
+  delete obj.password;
+  return obj;
+};
 
-// 3. Create the Mongoose Model (or get it if already defined)
-const User: Model<UserData> = mongoose.models.User || mongoose.model<UserData>('User', UserSchema);
-
-// Export the User model
-export { User };
+// 3. Create the Mongoose Models (or get them if already defined)
+// Export these models if you need to use them directly
+export const Admin: Model<UserData> = mongoose.models.Admin || mongoose.model<UserData>('Admin', AdminSchema);
+export const RegularUser: Model<UserData> = mongoose.models.RegularUser || mongoose.model<UserData>('RegularUser', RegularUserSchema);
 
 // 4. Database Helper Functions
+// We'll create specific helpers for each model for clarity and type safety.
 
-/**
- * Hashes a password using bcrypt with consistent configuration.
- * @param password The plaintext password to hash.
- * @returns The hashed password.
- */
-async function hashPassword(password: string): Promise<string> {
-  const saltRounds = 10; // Match the salt rounds used in your existing hash ($2a$10$)
-  return await bcrypt.hash(password, saltRounds);
+// --- Admin Helper Functions ---
+export async function createAdmin(userData: Omit<UserData, '_id' | '__v' | 'rollNoSlipUrl' | 'rollNumber'>): Promise<UserData> {
+  try {
+    const newAdmin = new Admin({ ...userData, role: 'admin' }); // Ensure role is admin
+    const savedAdmin = await newAdmin.save();
+    return savedAdmin.toJSON() as UserData;
+  } catch (error) {
+    console.error("Error creating admin user:", error);
+    throw new Error(`Failed to create admin user: ${(error as Error).message}`);
+  }
 }
 
-/**
- * Creates a new user in the database.
- * @param userData The data for the new user (password is required).
- * @returns The newly created user document (without password).
- * @throws Error if password is missing or invalid.
- */
-export async function createUser(userData: Omit<UserData, '_id' | '__v' | 'rollNoSlipUrl' | 'rollNumber'> & { password: string }): Promise<UserData> {
+export async function findAdminByEmail(email: string, includePassword: boolean = false): Promise<UserData | null> {
   try {
-    // Ensure password is provided
-    if (!userData.password) {
-      throw new Error("Password is required to create a user.");
+    let query = Admin.findOne({ email });
+    if (includePassword) {
+      query = query.select('+password');
     }
+    const admin = await query.lean();
+    return admin ? admin as UserData : null;
+  } catch (error) {
+    console.error(`Error finding admin by email ${email}:`, error);
+    throw new Error(`Failed to find admin by email: ${(error as Error).message}`);
+  }
+}
 
-    // Hash the password before saving
-    const hashedPassword = await hashPassword(userData.password);
-    const normalizedData = {
-      ...userData,
-      email: userData.email.trim().toLowerCase(),
-      password: hashedPassword,
-    };
-    const newUser = new User(normalizedData);
+export async function findAdminById(id: string): Promise<UserData | null> {
+  try {
+    const admin = await Admin.findById(id).lean();
+    return admin ? admin as UserData : null;
+  } catch (error) {
+    console.error(`Error finding admin by ID ${id}:`, error);
+    throw new Error(`Failed to find admin by ID: ${(error as Error).message}`);
+  }
+}
+
+export async function updateAdminProfile(id: string, updates: Partial<UserData>): Promise<boolean> {
+  try {
+    const result = await Admin.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { $set: updates });
+    return result.modifiedCount > 0;
+  } catch (error) {
+    console.error(`Error updating admin profile for ID ${id}:`, error);
+    throw new Error(`Failed to update admin profile: ${(error as Error).message}`);
+  }
+}
+
+export async function findAllAdmins(): Promise<UserData[]> {
+  try {
+    const admins = await Admin.find({}).lean();
+    return admins.map(admin => admin as UserData);
+  } catch (error) {
+    console.error("Error finding all admins:", error);
+    throw new Error(`Failed to retrieve admins: ${(error as Error).message}`);
+  }
+}
+
+
+// --- Regular User Helper Functions ---
+export async function createRegularUser(userData: Omit<UserData, '_id' | '__v' | 'rollNoSlipUrl' | 'rollNumber'>): Promise<UserData> {
+  try {
+    const newUser = new RegularUser({ ...userData, role: 'user' }); // Ensure role is user
     const savedUser = await newUser.save();
     return savedUser.toJSON() as UserData;
   } catch (error) {
-    console.error("Error creating user:", error);
-    throw new Error(`Failed to create user: ${(error as Error).message}`);
+    console.error("Error creating regular user:", error);
+    throw new Error(`Failed to create regular user: ${(error as Error).message}`);
   }
 }
 
-/**
- * Finds a user by their email address.
- * @param email The email of the user to find.
- * @param includePassword If true, the password field will be included in the returned user object.
- * @returns The user document if found, otherwise null.
- */
-export async function findUserByEmail(email: string, includePassword: boolean = false): Promise<UserData | null> {
+export async function findRegularUserByEmail(email: string, includePassword: boolean = false): Promise<UserData | null> {
   try {
-    const trimmedEmail = email.trim();
-    console.log(`findUserByEmail: Querying for email '${trimmedEmail}' in collection '${User.collection.name}'`);
-    console.log(`findUserByEmail: Full query object:`, { email: { $regex: new RegExp(`^${trimmedEmail}$`, 'i') } });
-
-    let query = User.findOne({ email: { $regex: new RegExp(`^${trimmedEmail}$`, 'i') } });
+    let query = RegularUser.findOne({ email });
     if (includePassword) {
       query = query.select('+password');
     }
     const user = await query.lean();
-    
-    console.log(`findUserByEmail: Query result count: ${user ? 1 : 0}`);
-    console.log(`findUserByEmail: Query result for '${trimmedEmail}': ${user ? 'User found.' : 'User NOT found.'}`);
-    if (user) {
-      console.log("Found user document (partial view):", { _id: user._id, email: user.email, role: user.role });
-    }
     return user ? user as UserData : null;
   } catch (error) {
-    console.error(`Error finding user by email ${email}:`, error);
-    throw new Error(`Failed to find user by email: ${(error as Error).message}`);
+    console.error(`Error finding regular user by email ${email}:`, error);
+    throw new Error(`Failed to find regular user by email: ${(error as Error).message}`);
   }
 }
 
-/**
- * Finds a user by their ID.
- * @param id The ID of the user to find.
- * @returns The user document if found, otherwise null.
- */
-export async function findUserById(id: string): Promise<UserData | null> {
+export async function findRegularUserById(id: string): Promise<UserData | null> {
   try {
-    const user = await User.findById(id).lean();
+    const user = await RegularUser.findById(id).lean();
     return user ? user as UserData : null;
   } catch (error) {
-    console.error(`Error finding user by ID ${id}:`, error);
-    throw new Error(`Failed to find user by ID: ${(error as Error).message}`);
+    console.error(`Error finding regular user by ID ${id}:`, error);
+    throw new Error(`Failed to find regular user by ID: ${(error as Error).message}`);
   }
 }
 
-/**
- * Finds all users in the database.
- * @returns A promise that resolves to an array of UserData, or an empty array if none found.
- */
-export async function findAllUsers(): Promise<UserData[]> {
+export async function updateRegularUserProfile(id: string, updates: Partial<UserData>): Promise<boolean> {
   try {
-    const users = await User.find({}).lean();
-    return users.map(user => user as UserData);
-  } catch (error) {
-    console.error("Error finding all users:", error);
-    throw new Error(`Failed to retrieve users: ${(error as Error).message}`);
-  }
-}
-
-/**
- * Updates a user's profile by ID.
- * @param id The ID of the user to update.
- * @param updates The fields to update.
- * @returns True if the update was successful, false otherwise.
- */
-export async function updateUserProfile(id: string, updates: Partial<UserData>): Promise<boolean> {
-  try {
-    if (updates.email) {
-      updates.email = updates.email.trim().toLowerCase();
-    }
-    if (updates.password) {
-      updates.password = await hashPassword(updates.password); // Hash new password if updated
-    }
-    const result = await User.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { $set: updates });
+    const result = await RegularUser.updateOne({ _id: new mongoose.Types.ObjectId(id) }, { $set: updates });
     return result.modifiedCount > 0;
   } catch (error) {
-    console.error(`Error updating user profile for ID ${id}:`, error);
-    throw new Error(`Failed to update user profile: ${(error as Error).message}`);
+    console.error(`Error updating regular user profile for ID ${id}:`, error);
+    throw new Error(`Failed to update regular user profile: ${(error as Error).message}`);
+  }
+}
+
+export async function findAllRegularUsers(): Promise<UserData[]> {
+  try {
+    const users = await RegularUser.find({}).lean();
+    return users.map(user => user as UserData);
+  } catch (error) {
+    console.error("Error finding all regular users:", error);
+    throw new Error(`Failed to retrieve regular users: ${(error as Error).message}`);
   }
 }
