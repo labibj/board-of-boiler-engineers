@@ -2,7 +2,10 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-import { createUser, findUserByEmail } from "@/lib/models/user"; 
+import bcrypt from "bcryptjs"; // For password hashing
+// ⭐ FIX: Import createRegularUser and findRegularUserByEmail
+import { createRegularUser, findRegularUserByEmail } from "@/lib/models/user"; 
+import dbConnect from "@/lib/db"; // Import dbConnect
 
 // Define JWT payload type for admin user (assuming admin tokens include role)
 interface JwtPayload {
@@ -13,12 +16,21 @@ interface JwtPayload {
   exp?: number;
 }
 
+// Ensure this API route is dynamically rendered and runs in Node.js runtime
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function POST(request: NextRequest) {
   try {
+    // Connect to DB before any operations
+    console.log("Admin Create Sub-User API: Starting request.");
+    await dbConnect();
+    console.log("Admin Create Sub-User API: Database connection established or reused.");
+
     // 1. Authentication: Get and verify the admin's JWT token
     const token = request.headers.get("Authorization")?.split(" ")[1];
     if (!token) {
-      console.error("Authorization Error: No token provided.");
+      console.error("Admin Create Sub-User API: Authorization Error: No token provided.");
       return NextResponse.json({ error: "Unauthorized: No token provided." }, { status: 401 });
     }
 
@@ -26,61 +38,68 @@ export async function POST(request: NextRequest) {
     try {
       decodedToken = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
     } catch (jwtError) {
-      console.error("Authorization Error: Invalid or expired token.", jwtError);
+      console.error("Admin Create Sub-User API: Authorization Error: Invalid or expired token.", jwtError);
       return NextResponse.json({ error: "Unauthorized: Invalid or expired token." }, { status: 401 });
     }
 
     // 2. Authorization: Check if the authenticated user has an 'admin' role
     if (decodedToken.role !== "admin") {
-      console.error(`Authorization Error: User ${decodedToken.email} is not an admin.`);
+      console.error(`Admin Create Sub-User API: Authorization Error: User ${decodedToken.email} is not an admin.`);
       return NextResponse.json({ error: "Forbidden: Only administrators can create new users." }, { status: 403 });
     }
 
     // 3. Get user data from the request body
     const { name, email, password, role } = await request.json();
+    console.log(`Admin Create Sub-User API: Received request to create user: ${email} with role: ${role}`);
 
     // 4. Input Validation
     if (!name || !email || !password || !role) {
-      console.error("Validation Error: Missing required fields.");
+      console.error("Admin Create Sub-User API: Validation Error: Missing required fields.");
       return NextResponse.json({ error: "Name, email, password, and role are required." }, { status: 400 });
     }
 
     // Basic email format validation (more robust validation can be added)
     if (!/\S+@\S+\.\S+/.test(email)) {
-      console.error("Validation Error: Invalid email format.");
+      console.error("Admin Create Sub-User API: Validation Error: Invalid email format.");
       return NextResponse.json({ error: "Invalid email format." }, { status: 400 });
     }
 
     // Password strength validation
     if (password.length < 6) {
-      console.error("Validation Error: Password too short.");
+      console.error("Admin Create Sub-User API: Validation Error: Password too short.");
       return NextResponse.json({ error: "Password must be at least 6 characters long." }, { status: 400 });
     }
 
-    // Validate role: ensure it's 'user' or 'admin'
-    if (!['user', 'admin'].includes(role)) {
-      console.error("Validation Error: Invalid role specified.");
-      return NextResponse.json({ error: "Invalid role specified. Must be 'user' or 'admin'." }, { status: 400 });
+    // Validate role: ensure it's 'user' or 'admin' (can only create regular users here)
+    if (role !== 'user') { // Admins can only create regular users via this route
+      console.error("Admin Create Sub-User API: Validation Error: Invalid role specified. Can only create 'user' roles here.");
+      return NextResponse.json({ error: "Invalid role specified. This route can only create 'user' roles." }, { status: 400 });
     }
 
     // 5. Check if user with this email already exists
-    const existingUser = await findUserByEmail(email);
+    console.log(`Admin Create Sub-User API: Checking for existing user with email: ${email}...`);
+    // ⭐ FIX: Use findRegularUserByEmail
+    const existingUser = await findRegularUserByEmail(email);
     if (existingUser) {
-      console.error(`Conflict Error: User with email ${email} already exists.`);
+      console.error(`Admin Create Sub-User API: Conflict Error: User with email ${email} already exists.`);
       return NextResponse.json({ error: "User with this email already exists." }, { status: 409 });
     }
 
-    // 6. Create the new user in the database
-    // Pass plaintext password to createUser, which will handle hashing internally
-    const newUser = await createUser({
+    // 6. Hash the password
+    console.log("Admin Create Sub-User API: Hashing password...");
+    const hashedPassword = await bcrypt.hash(password, 10); // 10 is the salt rounds
+
+    // 7. Create the new user in the database
+    console.log("Admin Create Sub-User API: Creating new regular user...");
+    // ⭐ FIX: Use createRegularUser
+    const newUser = await createRegularUser({
       name,
       email,
-      password, // Pass plaintext password
-      role,
+      password: hashedPassword, // Store the hashed password
+      role, // This should be 'user' as per validation above
     });
 
-    // Directly use newUser as it's already in the desired format (without password)
-    console.log(`User created successfully: ${newUser.email}`);
+    console.log(`Admin Create Sub-User API: User created successfully: ${newUser.email}`);
     return NextResponse.json({ success: true, message: "Sub-user created successfully!", user: newUser });
 
   } catch (error: unknown) {
@@ -88,7 +107,7 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error) {
       errorMessage = error.message;
     }
-    console.error("Form Submission Error:", error);
-    return NextResponse.json({ error: "Failed to submit application", details: errorMessage }, { status: 500 });
+    console.error("Admin Create Sub-User API: Failed to create sub-user:", error);
+    return NextResponse.json({ error: "Failed to create sub-user.", details: errorMessage }, { status: 500 });
   }
 }
